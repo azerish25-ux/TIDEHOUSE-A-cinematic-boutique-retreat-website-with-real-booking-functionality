@@ -23,7 +23,7 @@ jobs:
           POSTGRES_DB: tidehouse_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd 'pg_isready -U tidehouse -d tidehouse_test'
+          --health-cmd "pg_isready -U tidehouse -d tidehouse_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://tidehouse@localhost:5432/tidehouse_test
@@ -62,7 +62,7 @@ jobs:
           node --input-type=module -e "import fs from 'node:fs';fs.mkdirSync('evidence',{recursive:true});fs.writeFileSync('evidence/verification.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID,verifiedAt:new Date().toISOString(),paymentProvider:'local simulator; Stripe signatures tested without a provider account',limitations:['actual Stripe sandbox checkout needs account credentials','email sending needs sender credentials','this is not a public deployment']},null,2));"
       - name: Package source snapshot
         if: always()
-        run: git archive --format=zip HEAD -o tidehouse-source.zip
+        run: if [ -d .git ]; then git archive --format=zip HEAD -o tidehouse-source.zip; fi
       - name: Upload verification artifacts
         if: always()
         uses: actions/upload-artifact@v4
