@@ -1,0 +1,108 @@
+name: Quality & portfolio preview
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: tidehouse-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: tidehouse_test
+          POSTGRES_USER: tidehouse
+          POSTGRES_PASSWORD: tidehouse_ci_only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U tidehouse -d tidehouse_test'
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgresql://tidehouse:tidehouse_ci_only@localhost:5432/tidehouse_test
+      APP_ORIGIN: http://localhost:3000
+      APP_ENV: test
+      PAYMENT_PROVIDER: simulated
+      STRIPE_SECRET_KEY: sk_test_tidehouse_fixture_not_a_real_key
+      TEST_ADMIN_PASSWORD: Tidehouse-test-only-password-2026
+      NEXT_TELEMETRY_DISABLED: '1'
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install dependencies
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Save the generated dependency lock on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          if ! git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add package-lock.json
+            git commit -m 'chore: lock verified project dependencies'
+            git push origin HEAD:main
+          fi
+      - name: Configure isolated test owner credentials
+        run: node --input-type=module -e "import{randomBytes,scryptSync}from'node:crypto';import{appendFileSync}from'node:fs';const s=randomBytes(16).toString('hex');appendFileSync(process.env.GITHUB_ENV,'ADMIN_PASSWORD_HASH=scrypt:'+s+':'+scryptSync(process.env.TEST_ADMIN_PASSWORD,s,64).toString('hex')+'\n');"
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Package source and verification metadata
+        if: always()
+        run: |
+          mkdir -p artifacts
+          git ls-files | zip -q artifacts/tidehouse-source.zip -@
+          printf 'Repository: %s\nTested source: %s\nRun: %s\n' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$GITHUB_RUN_ID" > artifacts/verification.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tidehouse-source-and-visual-evidence
+          path: artifacts/
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-test-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+  preview:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          NEXT_PUBLIC_PREVIEW: '1'
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+      - uses: actions/configure-pages@v5
+        with: { enablement: true }
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: out }
+      - name: Publish explicitly labelled browser-only preview
+        id: deployment
+        uses: actions/deploy-pages@v4

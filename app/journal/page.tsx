@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import { editorial, imagery } from '../../lib/catalog';
+import { Icon } from '../../components/Icon';
+export const metadata={title:'Field notes'};
+export default function Page(){return <section className="journal-index"><p className="eyebrow">THE TIDEHOUSE JOURNAL</p><h1>Notes from<br/><em>a quieter coast.</em></h1><p className="lead">Small discoveries. Good things to eat. And a few reminders to take your time.</p><div className="journal-grid">{['shoreline','at-the-table','the-art-of-less'].map((slug,i)=>{const doc=editorial.find(d=>d.slug===slug)!;return <Link href={`/journal/${slug}/`} className="journal-card" key={slug}><div className="journal-image"><img src={[imagery.sea,imagery.breakfast,imagery.forest][i]} alt={['Coastal water and waves','Breakfast at a thoughtfully set table','Light through the forest'][i]}/><span className="image-action"><Icon name="diagonal"/></span></div><p className="eyebrow">{doc.eyebrow}</p><h2>{doc.title}</h2><p>{doc.body.split('\n\n')[0]}</p></Link>;})}</div></section>;}

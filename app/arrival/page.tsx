@@ -1,0 +1,4 @@
+import { EditorialArticle } from '../../components/Editorial';
+import { Icon } from '../../components/Icon';
+export const metadata={title:'Arrival & inclusions'};
+export default function Page(){return <><EditorialArticle slug="arrival"/><section className="inclusions"><p className="eyebrow">THE SMALL THINGS, TAKEN CARE OF</p><h2>Included, <em>always.</em></h2><div className="inclusions-grid">{[['A cabin of your own','Your whole cabin, a private deck and the space to make yourself at home.'],['The essentials, elevated','Linen bedding, towels, kitchen equipment and botanical bathroom essentials.'],['A thoughtful welcome','Coffee, tea and a welcome loaf. Breakfast is available as an optional extra.'],['A straightforward stay','One parking space, Wi-Fi and final cleaning, itemized in your complete quote.']].map(([title,body])=><article key={title}><Icon name="check"/><h3>{title}</h3><p>{body}</p></article>)}</div></section></>;}
