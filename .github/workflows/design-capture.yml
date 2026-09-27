@@ -1,5 +1,8 @@
 name: TIDEHOUSE design capture
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/design-capture.yml']
   workflow_dispatch:
     inputs:
       capture_id:
@@ -14,7 +17,7 @@ jobs:
     timeout-minutes: 8
     env:
       NEXT_TELEMETRY_DISABLED: '1'
-      CAPTURE_ID: ${{ inputs.capture_id }}
+      CAPTURE_ID: ${{ inputs.capture_id || 'c8b31b88-bc41-4e8f-a201-da4866c4b687' }}
     steps:
       - uses: actions/checkout@v4
         with:
