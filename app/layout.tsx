@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Site } from "@/components/Site";
 import "./globals.css";
 import "./refinements.css";
+import "./booking-polish.css";
 export const metadata: Metadata = {
   title: {
     default: "TIDEHOUSE — A little closer to doing nothing.",

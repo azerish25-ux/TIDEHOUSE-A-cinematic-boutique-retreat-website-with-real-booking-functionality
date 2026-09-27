@@ -5,7 +5,8 @@ import { appUrl, managementToken } from "./security.ts";
 import { money } from "./domain.ts";
 export async function processRefunds(pool: Pool) {
   let completed = 0,
-    failed = 0;
+    failed = 0,
+    review = 0;
   for (let i = 0; i < 10; i++) {
     const job = await transaction(pool, async (client) => {
       const r = await client.query(
@@ -39,20 +40,28 @@ export async function processRefunds(pool: Pool) {
       );
       completed++;
     } catch {
+      const exhausted = Number(job.attempts) + 1 >= 20;
       await pool.query(
-        "UPDATE refund_jobs SET state='failed',last_error='Provider refund needs retry or manual review',lease_until=NULL,updated_at=now() WHERE booking_id=$1",
-        [job.booking_id],
+        "UPDATE refund_jobs SET state='failed',last_error=$2,lease_until=NULL,updated_at=now() WHERE booking_id=$1",
+        [
+          job.booking_id,
+          exhausted
+            ? "Automatic refund retries exhausted; owner review required"
+            : "Provider refund needs retry",
+        ],
       );
       failed++;
+      if (exhausted) review++;
       break;
     }
   }
-  return { completed, failed };
+  return { completed, failed, review };
 }
 export async function deliverEmails(pool: Pool) {
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM)
     return { sent: 0, configured: false };
-  let sent = 0;
+  let sent = 0,
+    review = 0;
   for (let i = 0; i < 10; i++) {
     const job = await transaction(pool, async (client) => {
       const r = await client.query(
@@ -89,14 +98,21 @@ export async function deliverEmails(pool: Pool) {
       );
       sent++;
     } catch {
+      const exhausted = Number(job.attempts) + 1 >= 20;
       await pool.query(
-        "UPDATE email_outbox SET state='pending',lease_until=NULL,last_error='Email delivery needs retry' WHERE id=$1",
-        [job.id],
+        "UPDATE email_outbox SET state='pending',lease_until=NULL,last_error=$2 WHERE id=$1",
+        [
+          job.id,
+          exhausted
+            ? "Automatic email retries exhausted; owner review required"
+            : "Email delivery needs retry",
+        ],
       );
+      if (exhausted) review++;
       break;
     }
   }
-  return { sent, configured: true };
+  return { sent, configured: true, review };
 }
 export async function maintenance(pool: Pool) {
   await pool.query(

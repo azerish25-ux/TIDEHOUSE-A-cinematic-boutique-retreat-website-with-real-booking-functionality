@@ -1,3 +1,4 @@
+import { addons, type AddonId } from "./catalog.ts";
 import { addDays, parseDate, today, type Selection } from "./domain.ts";
 
 /** Public links are untrusted input; never use clamping to manufacture a cabin ID. */
@@ -44,12 +45,21 @@ export function readStayLink(
     addDays(arrival, 2),
     addDays(arrival, 21),
   );
+  const rawAddons = params.get("addons");
+  const selectedAddons: AddonId[] = [];
+  if (rawAddons) {
+    for (const id of rawAddons.split(",")) {
+      const known = addons.find(addon => addon.id === id);
+      if (!known || selectedAddons.includes(known.id)) corrected = true;
+      else selectedAddons.push(known.id);
+    }
+  }
   const selection: Selection = {
     cabinId: discrete("cabin", [1, 2, 3, 4, 5], 1),
     guests: discrete("guests", [1, 2, 3, 4], 2),
     arrival,
     departure,
-    addons: [],
+    addons: selectedAddons,
   };
   return { selection, corrected };
 }
@@ -57,4 +67,17 @@ export function readStayLink(
 /** Pair a response with the exact inputs it priced, even between render and effect. */
 export function selectionKey(selection: Selection) {
   return JSON.stringify({ ...selection, addons: [...selection.addons].sort() });
+}
+
+/** Whitelist only public trip choices. Never spread guest or reservation objects into a URL. */
+export function stayPath(selection: Selection): string {
+  const params = new URLSearchParams({
+    cabin: String(selection.cabinId),
+    arrival: selection.arrival,
+    departure: selection.departure,
+    guests: String(selection.guests),
+  });
+  const extras = addons.filter(addon => selection.addons.includes(addon.id)).map(addon => addon.id);
+  if (extras.length) params.set("addons", extras.join(","));
+  return `/stay?${params.toString()}`;
 }

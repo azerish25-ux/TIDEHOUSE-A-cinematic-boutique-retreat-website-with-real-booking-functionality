@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/domain.test.ts tests/release.test.ts",
+    "test": "tsx --test tests/domain.test.ts tests/release.test.ts tests/calendar.test.ts",
     "test:integration": "tsx --test --test-concurrency=1 tests/booking.test.ts",
     "test:e2e": "playwright test",
     "db:setup": "tsx scripts/setup.ts",

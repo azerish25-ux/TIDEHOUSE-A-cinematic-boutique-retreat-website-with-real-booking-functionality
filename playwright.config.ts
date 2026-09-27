@@ -33,7 +33,7 @@ export default defineConfig({
     },
     {
       name: "webkit",
-      testMatch: "**/release.spec.ts",
+      testMatch: ["**/release.spec.ts", "**/polish.spec.ts"],
       use: {
         ...devices["Desktop Safari"],
         viewport: { width: 1280, height: 900 },
@@ -42,7 +42,7 @@ export default defineConfig({
     },
     {
       name: "firefox",
-      testMatch: "**/release.spec.ts",
+      testMatch: ["**/release.spec.ts", "**/polish.spec.ts"],
       use: {
         ...devices["Desktop Firefox"],
         viewport: { width: 1280, height: 900 },

@@ -1,18 +1,27 @@
 "use client";
 import type { Cabin } from "@/lib/catalog";
+import { money } from "@/lib/domain";
 export function PropertyMap({
   cabins,
   selected,
   onSelect,
   compact = false,
+  availability,
+  checking = false,
 }: {
   cabins: Cabin[];
   selected: number;
   onSelect: (id: number) => void;
   compact?: boolean;
+  availability?: Record<number, {
+    available?: boolean;
+    quote?: { total: number } | null;
+    reason?: string;
+  }>;
+  checking?: boolean;
 }) {
   return (
-    <div className={`property-map ${compact ? "compact-map" : ""}`}>
+    <div className={`property-map ${compact ? "compact-map" : ""} ${availability || checking ? "availability-map" : ""}`}>
       <svg
         viewBox="0 0 900 620"
         role="img"
@@ -176,20 +185,55 @@ export function PropertyMap({
         </text>
       </svg>
       <div className="map-pins">
-        {cabins.map((c) => (
-          <button
-            key={c.id}
-            className={`map-pin ${selected === c.id ? "selected" : ""}`}
-            style={{ left: `${c.x}%`, top: `${c.y}%` }}
-            aria-label={`Explore ${c.name}`}
-            aria-pressed={selected === c.id}
-            onClick={() => onSelect(c.id)}
-          >
-            <span>{String(c.id).padStart(2, "0")}</span>
-            <span className="pin-label">{c.name}</span>
-          </button>
-        ))}
+        {cabins.map((c) => {
+          const result = availability?.[c.id];
+          const state = checking
+            ? "checking"
+            : result
+              ? result.available
+                ? "available"
+                : "unavailable"
+              : "unknown";
+          const detail = checking
+            ? "Checking your dates"
+            : result?.available && result.quote
+              ? `${money(result.quote.total)} complete stay`
+              : result?.reason ?? "";
+          const enhanced = !!availability || checking;
+          return (
+            <button
+              key={c.id}
+              className={`map-pin ${selected === c.id ? "selected" : ""}`}
+              style={{ left: `${c.x}%`, top: `${c.y}%` }}
+              data-availability={enhanced ? state : undefined}
+              aria-label={
+                enhanced
+                  ? `Explore ${c.name} — ${detail || "availability unavailable"}`
+                  : `Explore ${c.name}`
+              }
+              aria-pressed={selected === c.id}
+              onClick={() => onSelect(c.id)}
+            >
+              <span>{String(c.id).padStart(2, "0")}</span>
+              <span className="pin-label">
+                {c.name}
+                {enhanced && <small>{detail || "Availability unavailable"}</small>}
+              </span>
+              {enhanced && (
+                <i className="pin-availability-mark" aria-hidden="true">
+                  {state === "available" ? "✓" : state === "unavailable" ? "×" : "…"}
+                </i>
+              )}
+            </button>
+          );
+        })}
       </div>
+      {(availability || checking) && (
+        <div className="map-availability-legend" aria-label="Availability key">
+          <span><i>✓</i> available for your dates</span>
+          <span><i>×</i> unavailable or over capacity</span>
+        </div>
+      )}
       <div className="map-caption">
         <span>THE TIDEHOUSE GROUNDS</span>
         <span>An illustrated guide, not to scale</span>

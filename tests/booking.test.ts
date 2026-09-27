@@ -5,7 +5,7 @@ import pg from 'pg';
 import Stripe from 'stripe';
 import {reserve,settle,getBooking,readQuote,cancel,blockDates,unblockDates,updateRates,inventory} from '../lib/bookings.ts';
 import {today,addDays,AppError,type Selection} from '../lib/domain.ts';
-import {processRefunds} from '../lib/jobs.ts';
+import {processRefunds,deliverEmails} from '../lib/jobs.ts';
 import {stripeWebhook} from '../lib/payments.ts';
 const url=process.env.TEST_DATABASE_URL;
 if(!url||!new URL(url).pathname.endsWith('_test'))throw new Error('Refusing destructive tests: TEST_DATABASE_URL must point to a database ending in _test.');
@@ -41,4 +41,16 @@ test('signed paid webhook confirms; bad signatures and live events are rejected'
  const event={id:'evt_test_paid',object:'event',type:'checkout.session.completed',livemode:false,data:{object:{id:'cs_test_fixture',object:'checkout.session',client_reference_id:b.id,metadata:{booking_id:b.id},payment_status:'paid',amount_total:b.total,currency:'cad',payment_intent:'pi_test_fixture'}}};
  const client=new Stripe(process.env.STRIPE_SECRET_KEY);const send=(e:typeof event)=>{const body=JSON.stringify(e),signature=client.webhooks.generateTestHeaderString({payload:body,secret:process.env.STRIPE_WEBHOOK_SECRET!});return stripeWebhook(pool,body,signature);};
  await assert.rejects(()=>stripeWebhook(pool,JSON.stringify(event),'invalid'));await assert.rejects(()=>send({...event,livemode:true}));await send(event);assert.equal((await getBooking(pool,b.id)).status,'confirmed');
+});
+
+test('email outbox stops automatic retries at the limit and records owner review',async()=>{
+ const b=await held();await pay(b.id);
+ await pool.query("UPDATE email_outbox SET attempts=19 WHERE booking_id=$1 AND kind='confirmed'",[b.id]);
+ const oldFetch=globalThis.fetch,oldKey=process.env.RESEND_API_KEY,oldFrom=process.env.EMAIL_FROM;
+ let calls=0;process.env.RESEND_API_KEY='test-key';process.env.EMAIL_FROM='TIDEHOUSE <test@example.test>';
+ globalThis.fetch=async()=>{calls++;return new Response('rejected',{status:500});};
+ try{await deliverEmails(pool);await deliverEmails(pool);}
+ finally{globalThis.fetch=oldFetch;if(oldKey===undefined)delete process.env.RESEND_API_KEY;else process.env.RESEND_API_KEY=oldKey;if(oldFrom===undefined)delete process.env.EMAIL_FROM;else process.env.EMAIL_FROM=oldFrom;}
+ const row=(await pool.query("SELECT state,attempts,last_error FROM email_outbox WHERE booking_id=$1 AND kind='confirmed'",[b.id])).rows[0];
+ assert.equal(calls,1);assert.equal(row.state,'pending');assert.equal(row.attempts,20);assert.match(row.last_error,/owner review required/i);
 });

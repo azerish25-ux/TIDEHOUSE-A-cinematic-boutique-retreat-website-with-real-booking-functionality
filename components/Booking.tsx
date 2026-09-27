@@ -11,7 +11,12 @@ import { Arrow, TideMark } from "./Brand";
 type RecordView = BookingRecord & {
   refundableAmount: number;
   refund: { amount: number; state: string } | null;
-  emailDelivery: { kind: string; state: string }[];
+  emailDelivery: {
+    kind: string;
+    state: string;
+    attempts: number;
+    last_error: string | null;
+  }[];
 };
 
 export function Booking({ id }: { id: string }) {
@@ -250,7 +255,14 @@ export function Booking({ id }: { id: string }) {
                     (e) => e.kind === "confirmed" && e.state === "sent",
                   )
                     ? "A confirmation email has been sent."
-                    : "An email confirmation is queued. Email delivery requires the owner to configure a sending service; no email is claimed to have been sent."}
+                    : booking.emailDelivery.some(
+                          (e) =>
+                            e.kind === "confirmed" &&
+                            e.attempts >= 20 &&
+                            e.last_error?.includes("owner review"),
+                        )
+                      ? "Automatic email delivery has stopped after repeated failures and is flagged for owner review. No email is claimed to have been sent."
+                      : "An email confirmation is queued. Email delivery requires the owner to configure a sending service; no email is claimed to have been sent."}
                 </p>
                 <Link href="/field-notes/arrival" className="text-link">
                   A few notes for your arrival

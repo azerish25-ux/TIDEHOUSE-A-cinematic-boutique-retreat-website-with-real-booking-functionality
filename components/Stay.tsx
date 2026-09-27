@@ -16,6 +16,7 @@ import {
   type CabinAvailability,
 } from "./CabinDetails";
 import { Arrow } from "./Brand";
+import { StayTools } from "./StayTools";
 
 export function PriceBreakdown({ quote }: { quote: Quote }) {
   return (
@@ -263,6 +264,7 @@ export function Stay() {
           <span>03</span>Payment & a warm welcome
         </li>
       </ol>
+      <StayTools selection={selection} cabinName={cabin.name} />
       <div className="stay-layout">
         <div className="stay-main">
           <div className="stay-map-top">
@@ -274,6 +276,8 @@ export function Stay() {
             selected={selection.cabinId}
             onSelect={pickCabin}
             compact
+            availability={!loading ? search.results : undefined}
+            checking={loading}
           />
           <div className="cabin-selector">
             {cabins.map((c) => {

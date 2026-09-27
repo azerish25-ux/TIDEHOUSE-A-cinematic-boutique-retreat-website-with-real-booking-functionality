@@ -193,7 +193,7 @@ export async function getBooking(pool: Pool, id: string) {
       [id],
     );
     const delivery = await client.query(
-      "SELECT kind,state FROM email_outbox WHERE booking_id=$1 ORDER BY id",
+      "SELECT kind,state,attempts,last_error FROM email_outbox WHERE booking_id=$1 ORDER BY id",
       [id],
     );
     return {

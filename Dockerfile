@@ -14,6 +14,7 @@ ENV HOSTNAME=0.0.0.0
 RUN groupadd --system --gid 1001 nextjs && useradd --system --uid 1001 --gid nextjs nextjs
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]
