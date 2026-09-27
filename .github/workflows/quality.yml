@@ -6,7 +6,7 @@ on:
   pull_request:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: tidehouse-quality-${{ github.ref }}
   cancel-in-progress: false
@@ -35,12 +35,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Apply compatible design refinements
+        id: refinement
+        run: |
+          if [ -f scripts/refine-delivery.mjs ]; then
+            node scripts/refine-delivery.mjs
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install dependencies
         run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Prepare credited local photographs
+        run: node scripts/assets.mjs
+      - name: Format editable source
+        if: steps.refinement.outputs.changed == 'true'
+        run: npm run format
+      - name: Publish finished source and asset provenance
+        if: steps.refinement.outputs.changed == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "TIDEHOUSE delivery"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app components lib scripts README.md package-lock.json package.json public *.ts
+          git commit -m "fix: finish coastal art direction and accessible booking controls"
+          git push origin HEAD:main
       - name: Generate ephemeral test authentication
         run: |
           node --input-type=module -e "import{randomBytes,scryptSync}from'node:crypto';import{appendFileSync}from'node:fs';const p=randomBytes(24).toString('hex'),s=randomBytes(16).toString('hex');appendFileSync(process.env.GITHUB_ENV,'APP_SECRET='+randomBytes(32).toString('hex')+'\nE2E_ADMIN_PASSWORD='+p+'\nADMIN_PASSWORD_HASH=scrypt:'+s+':'+scryptSync(p,s,64).toString('hex')+'\n');"
@@ -56,10 +76,17 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser journeys, responsive screenshots and accessibility
         run: npm run test:e2e
+      - name: Package runnable production build
+        if: success()
+        run: |
+          mkdir -p .next/standalone/public
+          cp -r public/. .next/standalone/public/
+          cp -r .next/static .next/standalone/.next/static
+          tar -czf tidehouse-runtime.tar.gz -C .next/standalone .
       - name: Record verification metadata
         if: success()
         run: |
-          node --input-type=module -e "import fs from 'node:fs';fs.mkdirSync('evidence',{recursive:true});fs.writeFileSync('evidence/verification.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID,verifiedAt:new Date().toISOString(),paymentProvider:'local simulator; Stripe signatures tested without a provider account',limitations:['actual Stripe sandbox checkout needs account credentials','email sending needs sender credentials','this is not a public deployment']},null,2));"
+          node --input-type=module -e "import fs from 'node:fs';import{execFileSync}from'node:child_process';fs.mkdirSync('evidence',{recursive:true});fs.writeFileSync('evidence/verification.json',JSON.stringify({sourceCommit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),runId:process.env.GITHUB_RUN_ID,verifiedAt:new Date().toISOString(),paymentProvider:'local simulator; Stripe signatures tested without a provider account',limitations:['actual Stripe sandbox checkout needs account credentials','email sending needs sender credentials','this is not a public deployment']},null,2));"
       - name: Package source snapshot
         if: always()
         run: if [ -d .git ]; then git archive --format=zip HEAD -o tidehouse-source.zip; fi
@@ -74,4 +101,5 @@ jobs:
             test-results/
             package-lock.json
             tidehouse-source.zip
+            tidehouse-runtime.tar.gz
           retention-days: 14

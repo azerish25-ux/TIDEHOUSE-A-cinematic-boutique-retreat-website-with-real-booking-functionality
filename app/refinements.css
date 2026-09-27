@@ -1,0 +1,15 @@
+/* Keep the editorial palette while meeting readable small-text contrast. */
+:root { --muted: #506052; }
+.cabin-selector label { font-size: 11px; line-height: 1.45; }
+.cabin-selector label::after { content: none; }
+.cabin-selector input[type="checkbox"] { min-width: 16px; min-height: 16px; }
+.intro-bottom p, .ritual-copy p, .field-copy p { font-size: 14px; }
+.heading-aside, .cabin-subtitle { font-size: 13px; }
+.rate-note, .booking-reassurance { font-size: 12px; }
+.cabin-meta, .cabin-title small { font-size: 11px; }
+.map-legend button, .footer-bottom { font-size: 11px; }
+@media (max-width: 700px) {
+  .cabin-selector label { font-size: 10px; align-items: flex-start; }
+  .cabin-selector input { flex-shrink: 0; }
+  .cabin-meta { flex-wrap: wrap; }
+}
