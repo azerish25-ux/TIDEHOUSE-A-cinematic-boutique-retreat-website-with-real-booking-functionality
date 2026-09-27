@@ -1,0 +1,51 @@
+name: TIDEHOUSE design capture
+on:
+  workflow_dispatch:
+    inputs:
+      capture_id:
+        description: Single-use capture ID supplied by the Figma connector
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      CAPTURE_ID: ${{ inputs.capture_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate capture ID and add temporary local capture script
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          if (!/^[0-9a-f-]{36}$/i.test(process.env.CAPTURE_ID)) throw new Error('Invalid capture ID');
+          const layout='app/layout.tsx';
+          fs.writeFileSync(layout,fs.readFileSync(layout,'utf8').replace('</body>','<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script></body>'));
+          const config='next.config.ts';
+          fs.writeFileSync(config,fs.readFileSync(config,'utf8').replace("script-src 'self' 'unsafe-inline'","script-src 'self' 'unsafe-inline' https://mcp.figma.com").replace("connect-src 'self'","connect-src 'self' https://mcp.figma.com"));
+          NODE
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - run: npm run build
+      - name: Capture the local homepage with Chrome
+        run: |
+          mkdir -p evidence
+          npm run start > evidence/server.log 2>&1 & SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 40); do if curl -fsS http://localhost:3000/ >/dev/null; then break; fi; sleep 1; done
+          URL="http://localhost:3000/#figmacapture=${CAPTURE_ID}&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2F${CAPTURE_ID}%2Fsubmit%3FbindVariables%3Dtrue&figmadelay=5000"
+          google-chrome --headless --no-sandbox --disable-dev-shm-usage --window-size=1440,1100 --user-data-dir=/tmp/tidehouse-figma "$URL" > evidence/capture.log 2>&1 & BROWSER_PID=$!
+          sleep 80
+          kill "$BROWSER_PID" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tidehouse-figma-capture-log
+          path: evidence/
