@@ -1,0 +1,137 @@
+{
+  "notice": "TIDEHOUSE is fictional. These are real, credited photographs used for atmosphere and architectural inspiration, not AI-generated photographs or documentation of a real bookable property.",
+  "images": [
+    {
+      "id": "hero",
+      "photographer": "Yves Scheuber",
+      "description": "Quiet northern coast and timber cabins",
+      "source": "https://unsplash.com/photos/hxHoQpxvKI8",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/hero.jpg",
+      "sha256": "46ec71874ef745d65c35878b2e6e887bdcf5a2b0b9b0fb86aa11a3176179610a",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "lookout",
+      "photographer": "Barnabas Davoti",
+      "description": "Dark timber cabin beside a lake",
+      "source": "https://unsplash.com/photos/vu_1CFfK6Rk",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/lookout.jpg",
+      "sha256": "52ffb7ea79327b55b1c2be5811ff9c7ac3fd3091e10f5fc8abe1496ee4233f50",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "driftwood",
+      "photographer": "Nhi Ly",
+      "description": "Modern timber cabin among trees",
+      "source": "https://unsplash.com/photos/y6Dcrae8FNs",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/driftwood.jpg",
+      "sha256": "52e224dd9853c91cdd6fd504963b3268b7f6f43c119c51442bd068a990b2d01b",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "saltbox",
+      "photographer": "Yves Scheuber",
+      "description": "Northern coastal cabin architecture",
+      "source": "https://unsplash.com/photos/hxHoQpxvKI8",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/saltbox.jpg",
+      "sha256": "72e782af43aa049444367ff923397fdc187654c6f965f142e6f0db42530dca5e",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "dune",
+      "photographer": "Auroom Wellness",
+      "description": "Small timber building beside still water",
+      "source": "https://unsplash.com/photos/Vtl5uHCWpus",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/dune.jpg",
+      "sha256": "91c134dd800532eecb2e900235bb349689a9328a162186ef7ffa9954c83bdd50",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "stillwater",
+      "photographer": "Mick Kirchman",
+      "description": "Wooden cabin overlooking the ocean",
+      "source": "https://unsplash.com/photos/DVp3KH_RGqo",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/stillwater.jpg",
+      "sha256": "deb9e8eb065aea8ed2c79ed8d42969814a0cda9672b9c9de1fa5a7614ce04993",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "bedroom",
+      "photographer": "Clay Banks",
+      "description": "Natural wood and linen bedroom",
+      "source": "https://unsplash.com/photos/Xbe5BfScmvM",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/bedroom.jpg",
+      "sha256": "0e381b132c46a67b7ac758a655b9877b4460748278d72d39a56feb01c63bbd54",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "interior",
+      "photographer": "Clay Banks",
+      "description": "Warm timber living space",
+      "source": "https://unsplash.com/photos/DYJY3Sm8s80",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/interior.jpg",
+      "sha256": "683ef83e39bc6c715c162b796d88bf9536c986a911b9ed8084eff86fbb2799a2",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "coast",
+      "photographer": "Eric Fleming",
+      "description": "Atlantic waves and shoreline",
+      "source": "https://unsplash.com/photos/XCFAo370Vjo",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/coast.jpg",
+      "sha256": "49b537db1efbad8809cf550c54ba1b64add0bb0eed1d773a697958edfae6315f",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "forest",
+      "photographer": "Ali Kazal",
+      "description": "Woodland boardwalk",
+      "source": "https://unsplash.com/photos/NtTz9QdoE4Q",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/forest.jpg",
+      "sha256": "801bc4f9e67dfab7293088ccfd7872b5ffb4e697005c931dbcdb9c2486588a42",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "breakfast",
+      "photographer": "Olga Pukhalskaya",
+      "description": "Coffee and pastry on a wooden table",
+      "source": "https://unsplash.com/photos/t3fml85WJv4",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/breakfast.jpg",
+      "sha256": "230aaeb4cac07f6d249fa91e3a02f5a0b4eac74ad1555bc333966369584fb9b2",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    },
+    {
+      "id": "sauna",
+      "photographer": "HUUM",
+      "description": "Warm timber sauna interior",
+      "source": "https://unsplash.com/photos/p8VTUqQLLjM",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "localPath": "/images/sauna.jpg",
+      "sha256": "5bf81f630a5af905a2ac4e02fac9baa49cbba92230393d02396494ffec2f1ce4",
+      "usage": "Photographic inspiration for a fictional retreat. Not a photograph of TIDEHOUSE."
+    }
+  ]
+}

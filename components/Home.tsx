@@ -1,19 +1,381 @@
-'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState,type FormEvent } from 'react';
-import { imagery } from '@/lib/catalog';
-import { money,today,addDays } from '@/lib/domain';
-import { useCatalog } from './Site';
-import { Arrow,Sun } from './Brand';
-import { PropertyMap } from './PropertyMap';
-export function Home(){const {cabins}=useCatalog(),[selected,setSelected]=useState(1),[arrival,setArrival]=useState(addDays(today(),14)),[departure,setDeparture]=useState(addDays(today(),17)),[guests,setGuests]=useState(2);const cabin=cabins.find(c=>c.id===selected)!,router=useRouter();function search(e:FormEvent){e.preventDefault();router.push(`/stay?arrival=${arrival}&departure=${departure}&guests=${guests}`);}
- return <main id="main"><section className="hero"><img src={imagery.hero} alt="A timber cabin nestled above a quiet coastal shoreline in soft evening light" className="hero-image" fetchPriority="high"/><div className="hero-shade"/><div className="hero-topline"><span>A SMALL COLLECTION OF COASTAL CABINS</span><span>OPEN SLOWLY. STAY A WHILE.</span></div><div className="hero-copy"><span className="eyebrow">THE ART OF BEING HERE</span><h1>A little closer<br/>to <em>doing nothing.</em></h1><p>Five thoughtful cabins. An ever-changing sea.<br/>A place to find your own kind of quiet.</p><Link href="/stay" className="button cream">Find your stay <Arrow/></Link></div><div className="hero-caption"><span>WHERE THE WOODLAND MEETS THE WATER</span><a href="#welcome">A slower way down <Arrow direction="down"/></a></div><span className="vertical-caption">TIDEHOUSE — A COASTAL RETREAT</span></section>
- <form className="availability-bar" onSubmit={search}><div className="bar-intro"><Sun/><span>A few days,<br/><em>just for you.</em></span></div><label>ARRIVAL<input aria-label="Arrival date" type="date" value={arrival} min={addDays(today(),1)} max={addDays(today(),365)} onChange={e=>{setArrival(e.target.value);if(e.target.value>=departure)setDeparture(addDays(e.target.value,3));}} required/></label><label>DEPARTURE<input aria-label="Departure date" type="date" value={departure} min={addDays(arrival,2)} max={addDays(arrival,21)} onChange={e=>setDeparture(e.target.value)} required/></label><label>YOUR PEOPLE<select aria-label="Number of guests" value={guests} onChange={e=>setGuests(Number(e.target.value))}>{[1,2,3,4].map(n=><option key={n} value={n}>{n} {n===1?'guest':'guests'}</option>)}</select></label><button className="button dark" type="submit">Find your cabin <Arrow/></button></form>
- <section className="intro section-pad" id="welcome"><div className="section-index"><span>01 / A DIFFERENT PACE</span><Sun/></div><div className="intro-main"><h2>Less on your agenda.<br/><em>More on your horizon.</em></h2><div className="intro-bottom"><p>Some places ask you to do more. This one asks a little less. Tucked between salt meadow and shoreline, our five cabins are made for the things that tend to get lost in the everyday.</p><p>Long breakfasts. Windows left open.<br/>The last page of a good book.<br/>And nowhere else you need to be.</p></div></div></section>
- <section id="cabins" className="cabins-section section-pad"><div className="section-heading"><div><span className="eyebrow">02 / YOUR OWN LITTLE WORLD</span><h2>Five cabins.<br/><em>Five ways to exhale.</em></h2></div><div className="heading-aside"><p>Considered spaces, natural materials,<br/>and a view that does the talking.</p><Link className="text-link" href="/stay">Explore & compare cabins <Arrow/></Link></div></div><div className="cabin-editorial-grid">{cabins.map((c,i)=><article key={c.id} className={`cabin-card cabin-card-${i+1}`}><Link href={`/cabins/${c.slug}`} className="cabin-photo-link"><img src={c.image} alt={`Representative architectural photograph for ${c.name}`} loading="lazy"/><span className="image-counter">0{c.id} / 05</span><span className="photo-arrow" aria-hidden="true"><Arrow/></span></Link><div className="cabin-meta"><span>{c.view}</span><span>UP TO {c.capacity} GUESTS · {c.area} M²</span></div><div className="cabin-title"><h3><Link href={`/cabins/${c.slug}`}>{c.name}</Link></h3><p>from {money(c.baseRate)}<small> / night</small></p></div><p className="cabin-subtitle">{c.subtitle}</p></article>)}</div><p className="rate-note">Base rates in CAD. Your dates reveal the complete price, including extras and illustrative tax. Photographs are representative.</p></section>
- <section className="landscape-break"><img src={imagery.coast} alt="Ocean waves breaking into soft foam along the coast" loading="lazy"/><div><span className="eyebrow">NOTHING TO KEEP UP WITH.</span><p>Only the tide.</p></div><span className="landscape-caption">THE BEAUTY OF AN UNFILLED DAY</span></section>
- <section id="property" className="property-section section-pad"><div className="section-heading"><div><span className="eyebrow">03 / FIND YOUR PLACE</span><h2>A small place.<br/><em>A little room to roam.</em></h2></div><p className="heading-aside">Follow the paths. Find the sauna.<br/>Choose the cabin that feels like you.</p></div><div className="property-layout"><PropertyMap cabins={cabins} selected={selected} onSelect={setSelected}/><div className="map-cabin-preview"><span className="eyebrow">YOUR PLACE ON THE MAP / 0{cabin.id}</span><img src={cabin.image} alt={`Representative image for ${cabin.name}`} loading="lazy"/><h3>{cabin.name}</h3><p>{cabin.description}</p><div className="fine-rule"><span>{cabin.capacity} guests</span><span>{cabin.area} m²</span><span>{cabin.view}</span></div><Link href={`/stay?cabin=${cabin.id}`} className="text-link">Make this your place <Arrow/></Link></div></div><div className="map-legend">{cabins.map(c=><button key={c.id} onClick={()=>setSelected(c.id)} aria-pressed={selected===c.id} className={selected===c.id?'active':''}><span>0{c.id}</span>{c.name}</button>)}</div></section>
- <section className="rituals section-pad"><div className="section-heading"><div><span className="eyebrow">04 / THE SMALL RITUALS</span><h2>Good things.<br/><em>Simply done.</em></h2></div><p className="heading-aside">No itinerary required. Just two little extras<br/>to make a good stay your own.</p></div><div className="ritual-grid"><article><div className="ritual-photo"><img src={imagery.breakfast} alt="A thoughtfully prepared breakfast with fresh ingredients" loading="lazy"/></div><div className="ritual-copy"><span className="eyebrow">01 / AT YOUR DOOR</span><h3>The slow-morning basket</h3><p>Fresh bread, seasonal fruit, preserves and something warm. Delivered quietly, so your morning stays yours.</p><span className="ritual-price">CAD 24 / GUEST / NIGHT</span></div></article><article className="sauna-article"><div className="sauna-illustration"><svg viewBox="0 0 500 350" fill="none" aria-label="Line illustration of the private wood-fired sauna"><path d="M90 265V115l160-55 160 55v150H90Zm0-150 160 55 160-55M250 170v95M310 192v73h54v-92M139 149v54l56 18v-54" stroke="currentColor" strokeWidth="1.5"/><path d="m80 278 170 62 170-62M250 340v-75M320 70V20h15v55M215 20q-18 15 0 30t0 30M242 10q-18 15 0 30t0 30M270 20q-18 15 0 30t0 30" stroke="currentColor" strokeWidth="1.2"/>{Array.from({length:8},(_,i)=><path key={i} d={`M${107+i*18} ${125+i*6}v${140-i*6}`} stroke="currentColor" opacity=".4"/>)}</svg><span>WARMTH, WOODSMOKE & ABSOLUTELY NO RUSH</span></div><div className="ritual-copy"><span className="eyebrow">02 / JUST FOR YOUR PEOPLE</span><h3>A little warmth, by the water</h3><p>A private hour in the wood-fired sauna. A gentle ritual for after the walk, or instead of it. We’ll arrange your time together.</p><span className="ritual-price">CAD 65 / PRIVATE SESSION</span></div></article></div></section>
- <section className="field-notes section-pad"><div className="field-image"><img src={imagery.forest} alt="Sunlight filtering through a quiet woodland canopy" loading="lazy"/><span>TAKE THE LONG WAY HOME.</span></div><div className="field-copy"><span className="eyebrow">05 / NOTES FROM A QUIETER PLACE</span><h2>No must-sees.<br/><em>Just possibilities.</em></h2><p>A favourite path. An unhurried supper. A good spot to watch the weather come in. Our field guide is less a list of things to do, more an invitation to notice.</p><Link className="text-link" href="/field-notes/guide">Open the field notes <Arrow/></Link><div className="field-small-links"><Link href="/field-notes/arrival">Before you arrive <Arrow/></Link><Link href="/field-notes/accessibility">A thoughtful welcome <Arrow/></Link></div></div></section></main>;
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
+import { imagery } from "@/lib/catalog";
+import { money, today, addDays } from "@/lib/domain";
+import { useCatalog } from "./Site";
+import { Arrow, Sun } from "./Brand";
+import { PropertyMap } from "./PropertyMap";
+export function Home() {
+  const { cabins } = useCatalog(),
+    [selected, setSelected] = useState(1),
+    [arrival, setArrival] = useState(addDays(today(), 14)),
+    [departure, setDeparture] = useState(addDays(today(), 17)),
+    [guests, setGuests] = useState(2);
+  const cabin = cabins.find((c) => c.id === selected)!,
+    router = useRouter();
+  function search(e: FormEvent) {
+    e.preventDefault();
+    router.push(
+      `/stay?arrival=${arrival}&departure=${departure}&guests=${guests}`,
+    );
+  }
+  return (
+    <main id="main">
+      <section className="hero">
+        <img
+          src={imagery.hero}
+          alt="A timber cabin nestled above a quiet coastal shoreline in soft evening light"
+          className="hero-image"
+          fetchPriority="high"
+        />
+        <div className="hero-shade" />
+        <div className="hero-topline">
+          <span>A SMALL COLLECTION OF COASTAL CABINS</span>
+          <span>OPEN SLOWLY. STAY A WHILE.</span>
+        </div>
+        <div className="hero-copy">
+          <span className="eyebrow">THE ART OF BEING HERE</span>
+          <h1>
+            A little closer
+            <br />
+            to <em>doing nothing.</em>
+          </h1>
+          <p>
+            Five thoughtful cabins. An ever-changing sea.
+            <br />A place to find your own kind of quiet.
+          </p>
+          <Link href="/stay" className="button cream">
+            Find your stay <Arrow />
+          </Link>
+        </div>
+        <div className="hero-caption">
+          <span>WHERE THE WOODLAND MEETS THE WATER</span>
+          <a href="#welcome">
+            A slower way down <Arrow direction="down" />
+          </a>
+        </div>
+        <span className="vertical-caption">TIDEHOUSE — A COASTAL RETREAT</span>
+      </section>
+      <form className="availability-bar" onSubmit={search}>
+        <div className="bar-intro">
+          <Sun />
+          <span>
+            A few days,
+            <br />
+            <em>just for you.</em>
+          </span>
+        </div>
+        <label>
+          ARRIVAL
+          <input
+            aria-label="Arrival date"
+            type="date"
+            value={arrival}
+            min={addDays(today(), 1)}
+            max={addDays(today(), 365)}
+            onChange={(e) => {
+              setArrival(e.target.value);
+              if (e.target.value >= departure)
+                setDeparture(addDays(e.target.value, 3));
+            }}
+            required
+          />
+        </label>
+        <label>
+          DEPARTURE
+          <input
+            aria-label="Departure date"
+            type="date"
+            value={departure}
+            min={addDays(arrival, 2)}
+            max={addDays(arrival, 21)}
+            onChange={(e) => setDeparture(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          YOUR PEOPLE
+          <select
+            aria-label="Number of guests"
+            value={guests}
+            onChange={(e) => setGuests(Number(e.target.value))}
+          >
+            {[1, 2, 3, 4].map((n) => (
+              <option key={n} value={n}>
+                {n} {n === 1 ? "guest" : "guests"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="button dark" type="submit">
+          Find your cabin <Arrow />
+        </button>
+      </form>
+      <section className="intro section-pad" id="welcome">
+        <div className="section-index">
+          <span>01 / A DIFFERENT PACE</span>
+          <Sun />
+        </div>
+        <div className="intro-main">
+          <h2>
+            Less on your agenda.
+            <br />
+            <em>More on your horizon.</em>
+          </h2>
+          <div className="intro-bottom">
+            <p>
+              Some places ask you to do more. This one asks a little less.
+              Tucked between salt meadow and shoreline, our five cabins are made
+              for the things that tend to get lost in the everyday.
+            </p>
+            <p>
+              Long breakfasts. Windows left open.
+              <br />
+              The last page of a good book.
+              <br />
+              And nowhere else you need to be.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section id="cabins" className="cabins-section section-pad">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">02 / YOUR OWN LITTLE WORLD</span>
+            <h2>
+              Five cabins.
+              <br />
+              <em>Five ways to exhale.</em>
+            </h2>
+          </div>
+          <div className="heading-aside">
+            <p>
+              Considered spaces, natural materials,
+              <br />
+              and a view that does the talking.
+            </p>
+            <Link className="text-link" href="/stay">
+              Explore & compare cabins <Arrow />
+            </Link>
+          </div>
+        </div>
+        <div className="cabin-editorial-grid">
+          {cabins.map((c, i) => (
+            <article key={c.id} className={`cabin-card cabin-card-${i + 1}`}>
+              <Link href={`/cabins/${c.slug}`} className="cabin-photo-link">
+                <img
+                  src={c.image}
+                  alt={`Representative architectural photograph for ${c.name}`}
+                  loading="lazy"
+                />
+                <span className="image-counter">0{c.id} / 05</span>
+                <span className="photo-arrow" aria-hidden="true">
+                  <Arrow />
+                </span>
+              </Link>
+              <div className="cabin-meta">
+                <span>{c.view}</span>
+                <span>
+                  UP TO {c.capacity} GUESTS · {c.area} M²
+                </span>
+              </div>
+              <div className="cabin-title">
+                <h3>
+                  <Link href={`/cabins/${c.slug}`}>{c.name}</Link>
+                </h3>
+                <p>
+                  from {money(c.baseRate)}
+                  <small> / night</small>
+                </p>
+              </div>
+              <p className="cabin-subtitle">{c.subtitle}</p>
+            </article>
+          ))}
+        </div>
+        <p className="rate-note">
+          Base rates in CAD. Your dates reveal the complete price, including
+          extras and illustrative tax. Photographs are representative.
+        </p>
+      </section>
+      <section className="landscape-break">
+        <img
+          src={imagery.coast}
+          alt="Ocean waves breaking into soft foam along the coast"
+          loading="lazy"
+        />
+        <div>
+          <span className="eyebrow">NOTHING TO KEEP UP WITH.</span>
+          <p>Only the tide.</p>
+        </div>
+        <span className="landscape-caption">THE BEAUTY OF AN UNFILLED DAY</span>
+      </section>
+      <section id="property" className="property-section section-pad">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">03 / FIND YOUR PLACE</span>
+            <h2>
+              A small place.
+              <br />
+              <em>A little room to roam.</em>
+            </h2>
+          </div>
+          <p className="heading-aside">
+            Follow the paths. Find the sauna.
+            <br />
+            Choose the cabin that feels like you.
+          </p>
+        </div>
+        <div className="property-layout">
+          <PropertyMap
+            cabins={cabins}
+            selected={selected}
+            onSelect={setSelected}
+          />
+          <div className="map-cabin-preview">
+            <span className="eyebrow">YOUR PLACE ON THE MAP / 0{cabin.id}</span>
+            <img
+              src={cabin.image}
+              alt={`Representative image for ${cabin.name}`}
+              loading="lazy"
+            />
+            <h3>{cabin.name}</h3>
+            <p>{cabin.description}</p>
+            <div className="fine-rule">
+              <span>{cabin.capacity} guests</span>
+              <span>{cabin.area} m²</span>
+              <span>{cabin.view}</span>
+            </div>
+            <Link href={`/stay?cabin=${cabin.id}`} className="text-link">
+              Make this your place <Arrow />
+            </Link>
+          </div>
+        </div>
+        <div className="map-legend">
+          {cabins.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelected(c.id)}
+              aria-pressed={selected === c.id}
+              className={selected === c.id ? "active" : ""}
+            >
+              <span>0{c.id}</span>
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="rituals section-pad">
+        <div className="section-heading">
+          <div>
+            <span className="eyebrow">04 / THE SMALL RITUALS</span>
+            <h2>
+              Good things.
+              <br />
+              <em>Simply done.</em>
+            </h2>
+          </div>
+          <p className="heading-aside">
+            No itinerary required. Just two little extras
+            <br />
+            to make a good stay your own.
+          </p>
+        </div>
+        <div className="ritual-grid">
+          <article>
+            <div className="ritual-photo">
+              <img
+                src={imagery.breakfast}
+                alt="A thoughtfully prepared breakfast with fresh ingredients"
+                loading="lazy"
+              />
+            </div>
+            <div className="ritual-copy">
+              <span className="eyebrow">01 / AT YOUR DOOR</span>
+              <h3>The slow-morning basket</h3>
+              <p>
+                Fresh bread, seasonal fruit, preserves and something warm.
+                Delivered quietly, so your morning stays yours.
+              </p>
+              <span className="ritual-price">CAD 24 / GUEST / NIGHT</span>
+            </div>
+          </article>
+          <article className="sauna-article">
+            <div className="sauna-illustration">
+              <svg
+                viewBox="0 0 500 350"
+                fill="none"
+                aria-label="Line illustration of the private wood-fired sauna"
+              >
+                <path
+                  d="M90 265V115l160-55 160 55v150H90Zm0-150 160 55 160-55M250 170v95M310 192v73h54v-92M139 149v54l56 18v-54"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="m80 278 170 62 170-62M250 340v-75M320 70V20h15v55M215 20q-18 15 0 30t0 30M242 10q-18 15 0 30t0 30M270 20q-18 15 0 30t0 30"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+                {Array.from({ length: 8 }, (_, i) => (
+                  <path
+                    key={i}
+                    d={`M${107 + i * 18} ${125 + i * 6}v${140 - i * 6}`}
+                    stroke="currentColor"
+                    opacity=".4"
+                  />
+                ))}
+              </svg>
+              <span>WARMTH, WOODSMOKE & ABSOLUTELY NO RUSH</span>
+            </div>
+            <div className="ritual-copy">
+              <span className="eyebrow">02 / JUST FOR YOUR PEOPLE</span>
+              <h3>A little warmth, by the water</h3>
+              <p>
+                A private hour in the wood-fired sauna. A gentle ritual for
+                after the walk, or instead of it. We’ll arrange your time
+                together.
+              </p>
+              <span className="ritual-price">CAD 65 / PRIVATE SESSION</span>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section className="field-notes section-pad">
+        <div className="field-image">
+          <img
+            src={imagery.forest}
+            alt="Sunlight filtering through a quiet woodland canopy"
+            loading="lazy"
+          />
+          <span>TAKE THE LONG WAY HOME.</span>
+        </div>
+        <div className="field-copy">
+          <span className="eyebrow">05 / NOTES FROM A QUIETER PLACE</span>
+          <h2>
+            No must-sees.
+            <br />
+            <em>Just possibilities.</em>
+          </h2>
+          <p>
+            A favourite path. An unhurried supper. A good spot to watch the
+            weather come in. Our field guide is less a list of things to do,
+            more an invitation to notice.
+          </p>
+          <Link className="text-link" href="/field-notes/guide">
+            Open the field notes <Arrow />
+          </Link>
+          <div className="field-small-links">
+            <Link href="/field-notes/arrival">
+              Before you arrive <Arrow />
+            </Link>
+            <Link href="/field-notes/accessibility">
+              A thoughtful welcome <Arrow />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
 }

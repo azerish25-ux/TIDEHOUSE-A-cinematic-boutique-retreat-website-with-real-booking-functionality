@@ -1,36 +1,284 @@
 export type Cabin = {
-  id: number; slug: string; name: string; subtitle: string; view: string; capacity: number;
-  area: number; beds: string; baseRate: number; image: string; gallery: string[];
-  description: string; access: string; amenities: string[]; x: number; y: number;
+  id: number;
+  slug: string;
+  name: string;
+  subtitle: string;
+  view: string;
+  capacity: number;
+  area: number;
+  beds: string;
+  baseRate: number;
+  image: string;
+  gallery: string[];
+  description: string;
+  access: string;
+  amenities: string[];
+  x: number;
+  y: number;
   faqs: { question: string; answer: string }[];
 };
-export const photo = (id: string, width = 1400) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=85`;
-export const imagery = {
-  hero: photo('photo-1499793983690-e29da59ef1c2', 2200),
-  coast: photo('photo-1500375592092-40eb2168fd21', 1800),
-  forest: photo('photo-1441974231531-c6227db76b6e', 1200),
-  interior: photo('photo-1616486338812-3dadae4b4ace'),
-  breakfast: photo('photo-1533089860892-a7c6f0a88666', 900),
-  cabin: photo('photo-1449158743715-0a90ebb6d2d8'),
+const photoAssets: Record<string, string> = {
+  "photo-1499793983690-e29da59ef1c2": "hero",
+  "photo-1500375592092-40eb2168fd21": "coast",
+  "photo-1441974231531-c6227db76b6e": "forest",
+  "photo-1616486338812-3dadae4b4ace": "interior",
+  "photo-1533089860892-a7c6f0a88666": "breakfast",
+  "photo-1449158743715-0a90ebb6d2d8": "driftwood",
+  "photo-1502005229762-cf1b2da7c5d6": "bedroom",
+  "photo-1518780664697-55e3ad937233": "lookout",
+  "photo-1510798831971-661eb04b3739": "dune",
+  "photo-1449844908441-8829872d2607": "stillwater",
 };
-const included = ['Private deck', 'Fully equipped kitchen', 'Linen & towels', 'Wood stove & firewood', 'Wi-Fi', 'Parking & final cleaning'];
+export const photo = (id: string, _width = 1400) => {
+  const asset = photoAssets[id];
+  if (!asset) throw new Error("Unregistered editorial photograph");
+  return "/images/" + asset + ".jpg";
+};
+export const imagery = {
+  hero: photo("photo-1499793983690-e29da59ef1c2", 2200),
+  coast: photo("photo-1500375592092-40eb2168fd21", 1800),
+  forest: photo("photo-1441974231531-c6227db76b6e", 1200),
+  interior: photo("photo-1616486338812-3dadae4b4ace"),
+  breakfast: photo("photo-1533089860892-a7c6f0a88666", 900),
+  cabin: photo("photo-1449158743715-0a90ebb6d2d8"),
+};
+const included = [
+  "Private deck",
+  "Fully equipped kitchen",
+  "Linen & towels",
+  "Wood stove & firewood",
+  "Wi-Fi",
+  "Parking & final cleaning",
+];
 export const cabins: Cabin[] = [
-  { id:1, slug:'the-lookout', name:'The Lookout', subtitle:'A front-row seat to the sea.', view:'Uninterrupted ocean', capacity:2, area:42, beds:'One king bed', baseRate:29500, image:imagery.hero, gallery:[imagery.hero,imagery.interior,imagery.coast], description:'Set a little above the shoreline, The Lookout opens to a wide sweep of water. Coffee on the deck. A book beside the fire. Nothing between you and the horizon.', access:'Twelve timber steps from the path. The cabin is single-level, but the approach is not step-free. Shower has a 60 mm lip.', amenities:included, x:70,y:27, faqs:[{question:'How private is the deck?',answer:'The deck faces the water and is screened from the neighbouring cabin by planting. The coastal path is below the cabin.'},{question:'Can we bring children?',answer:'The Lookout sleeps two guests in one king bed. Every guest, including a child, counts towards the two-person limit.'}] },
-  { id:2, slug:'driftwood', name:'Driftwood', subtitle:'Slow mornings, softly framed.', view:'Dunes & distant sea', capacity:2, area:46, beds:'One king bed', baseRate:27500, image:photo('photo-1449158743715-0a90ebb6d2d8'), gallery:[photo('photo-1449158743715-0a90ebb6d2d8'),photo('photo-1502005229762-cf1b2da7c5d6'),imagery.coast], description:'Weathered timber, pale linen and a sheltered terrace looking across the grasses. Our most gently connected cabin, with a level approach from its parking space.', access:'Step-free 18 m firm path, 900 mm entrance, 1,500 mm turning area, level shower and grab rails. Bed height 520 mm. Contact the host about your exact requirements; no accessibility certification is claimed.', amenities:[...included,'Step-free approach','Level-access shower'], x:53,y:43, faqs:[{question:'Is the route from parking step-free?',answer:'Yes. A firm, level 18 m path connects the dedicated parking space to the entrance. The shoreline itself is uneven and not step-free.'},{question:'Is the cabin suitable for a wheelchair?',answer:'The plan includes 900 mm clear entrances, a 1,500 mm turning area and a level shower. Please review the detailed access information against your individual requirements.'}] },
-  { id:3, slug:'saltgrass', name:'Saltgrass', subtitle:'Room for your favourite people.', view:'Meadow & ocean glimpses', capacity:4, area:64, beds:'One king + two single beds', baseRate:34500, image:photo('photo-1518780664697-55e3ad937233'), gallery:[photo('photo-1518780664697-55e3ad937233'),imagery.interior,imagery.forest], description:'A two-bedroom hideaway tucked into the meadow. A generous dining table and an open living room make space for long breakfasts and board games after dark.', access:'Three entrance steps. All rooms on one level. Narrowest interior doorway 760 mm. Shower has a raised tray.', amenities:[...included,'Two bedrooms','Board games'], x:34,y:35, faqs:[{question:'Are the bedrooms separate?',answer:'Yes. One bedroom has a king bed; the second has two single beds. Four is the maximum total occupancy.'},{question:'Is the garden enclosed?',answer:'No. The meadow connects to the wider property. Children need supervision near the shore and stove.'}] },
-  { id:4, slug:'the-cove', name:'The Cove', subtitle:'A small retreat within the retreat.', view:'Sheltered shoreline', capacity:2, area:38, beds:'One queen bed', baseRate:26500, image:photo('photo-1510798831971-661eb04b3739'), gallery:[photo('photo-1510798831971-661eb04b3739'),photo('photo-1502005229762-cf1b2da7c5d6'),imagery.coast], description:'The smallest of our five cabins, close to the sound of the water. Warm oak, a deep reading chair and a sheltered deck make a little room feel like a whole world.', access:'Six entrance steps and an uneven final 25 m section of path. Not step-free. Shower has a raised tray.', amenities:[...included,'Reading nook'], x:78,y:64, faqs:[{question:'How close is the water?',answer:'The shore path is approximately 35 m from the cabin. There is no private beach or supervised swimming area.'},{question:'Can we add an extra bed?',answer:'No. The Cove has one queen bed and a maximum occupancy of two.'}] },
-  { id:5, slug:'the-headland', name:'The Headland', subtitle:'Space to settle in. A view to stay for.', view:'Panoramic coast', capacity:4, area:72, beds:'Two king beds', baseRate:39500, image:photo('photo-1449844908441-8829872d2607'), gallery:[photo('photo-1449844908441-8829872d2607'),imagery.interior,imagery.coast], description:'Our largest cabin sits at the edge of the headland, with two bedrooms and a long deck made for the evening light. Best shared with people who appreciate a slower pace.', access:'Eight entrance steps. All indoor rooms on one level. Deck has a 40 mm threshold. Not step-free.', amenities:[...included,'Two bedrooms','Large dining table'], x:48,y:72, faqs:[{question:'Do both bedrooms have a view?',answer:'The main bedroom faces the ocean. The second looks into the trees. Both have king beds.'},{question:'Is this cabin suitable for two couples?',answer:'Yes. There are two separate bedrooms, one shared bathroom and a generous communal living space.'}] },
+  {
+    id: 1,
+    slug: "the-lookout",
+    name: "The Lookout",
+    subtitle: "A front-row seat to the sea.",
+    view: "Uninterrupted ocean",
+    capacity: 2,
+    area: 42,
+    beds: "One king bed",
+    baseRate: 29500,
+    image: imagery.hero,
+    gallery: [imagery.hero, imagery.interior, imagery.coast],
+    description:
+      "Set a little above the shoreline, The Lookout opens to a wide sweep of water. Coffee on the deck. A book beside the fire. Nothing between you and the horizon.",
+    access:
+      "Twelve timber steps from the path. The cabin is single-level, but the approach is not step-free. Shower has a 60 mm lip.",
+    amenities: included,
+    x: 70,
+    y: 27,
+    faqs: [
+      {
+        question: "How private is the deck?",
+        answer:
+          "The deck faces the water and is screened from the neighbouring cabin by planting. The coastal path is below the cabin.",
+      },
+      {
+        question: "Can we bring children?",
+        answer:
+          "The Lookout sleeps two guests in one king bed. Every guest, including a child, counts towards the two-person limit.",
+      },
+    ],
+  },
+  {
+    id: 2,
+    slug: "driftwood",
+    name: "Driftwood",
+    subtitle: "Slow mornings, softly framed.",
+    view: "Dunes & distant sea",
+    capacity: 2,
+    area: 46,
+    beds: "One king bed",
+    baseRate: 27500,
+    image: photo("photo-1449158743715-0a90ebb6d2d8"),
+    gallery: [
+      photo("photo-1449158743715-0a90ebb6d2d8"),
+      photo("photo-1502005229762-cf1b2da7c5d6"),
+      imagery.coast,
+    ],
+    description:
+      "Weathered timber, pale linen and a sheltered terrace looking across the grasses. Our most gently connected cabin, with a level approach from its parking space.",
+    access:
+      "Step-free 18 m firm path, 900 mm entrance, 1,500 mm turning area, level shower and grab rails. Bed height 520 mm. Contact the host about your exact requirements; no accessibility certification is claimed.",
+    amenities: [...included, "Step-free approach", "Level-access shower"],
+    x: 53,
+    y: 43,
+    faqs: [
+      {
+        question: "Is the route from parking step-free?",
+        answer:
+          "Yes. A firm, level 18 m path connects the dedicated parking space to the entrance. The shoreline itself is uneven and not step-free.",
+      },
+      {
+        question: "Is the cabin suitable for a wheelchair?",
+        answer:
+          "The plan includes 900 mm clear entrances, a 1,500 mm turning area and a level shower. Please review the detailed access information against your individual requirements.",
+      },
+    ],
+  },
+  {
+    id: 3,
+    slug: "saltgrass",
+    name: "Saltgrass",
+    subtitle: "Room for your favourite people.",
+    view: "Meadow & ocean glimpses",
+    capacity: 4,
+    area: 64,
+    beds: "One king + two single beds",
+    baseRate: 34500,
+    image: photo("photo-1518780664697-55e3ad937233"),
+    gallery: [
+      photo("photo-1518780664697-55e3ad937233"),
+      imagery.interior,
+      imagery.forest,
+    ],
+    description:
+      "A two-bedroom hideaway tucked into the meadow. A generous dining table and an open living room make space for long breakfasts and board games after dark.",
+    access:
+      "Three entrance steps. All rooms on one level. Narrowest interior doorway 760 mm. Shower has a raised tray.",
+    amenities: [...included, "Two bedrooms", "Board games"],
+    x: 34,
+    y: 35,
+    faqs: [
+      {
+        question: "Are the bedrooms separate?",
+        answer:
+          "Yes. One bedroom has a king bed; the second has two single beds. Four is the maximum total occupancy.",
+      },
+      {
+        question: "Is the garden enclosed?",
+        answer:
+          "No. The meadow connects to the wider property. Children need supervision near the shore and stove.",
+      },
+    ],
+  },
+  {
+    id: 4,
+    slug: "the-cove",
+    name: "The Cove",
+    subtitle: "A small retreat within the retreat.",
+    view: "Sheltered shoreline",
+    capacity: 2,
+    area: 38,
+    beds: "One queen bed",
+    baseRate: 26500,
+    image: photo("photo-1510798831971-661eb04b3739"),
+    gallery: [
+      photo("photo-1510798831971-661eb04b3739"),
+      photo("photo-1502005229762-cf1b2da7c5d6"),
+      imagery.coast,
+    ],
+    description:
+      "The smallest of our five cabins, close to the sound of the water. Warm oak, a deep reading chair and a sheltered deck make a little room feel like a whole world.",
+    access:
+      "Six entrance steps and an uneven final 25 m section of path. Not step-free. Shower has a raised tray.",
+    amenities: [...included, "Reading nook"],
+    x: 78,
+    y: 64,
+    faqs: [
+      {
+        question: "How close is the water?",
+        answer:
+          "The shore path is approximately 35 m from the cabin. There is no private beach or supervised swimming area.",
+      },
+      {
+        question: "Can we add an extra bed?",
+        answer:
+          "No. The Cove has one queen bed and a maximum occupancy of two.",
+      },
+    ],
+  },
+  {
+    id: 5,
+    slug: "the-headland",
+    name: "The Headland",
+    subtitle: "Space to settle in. A view to stay for.",
+    view: "Panoramic coast",
+    capacity: 4,
+    area: 72,
+    beds: "Two king beds",
+    baseRate: 39500,
+    image: photo("photo-1449844908441-8829872d2607"),
+    gallery: [
+      photo("photo-1449844908441-8829872d2607"),
+      imagery.interior,
+      imagery.coast,
+    ],
+    description:
+      "Our largest cabin sits at the edge of the headland, with two bedrooms and a long deck made for the evening light. Best shared with people who appreciate a slower pace.",
+    access:
+      "Eight entrance steps. All indoor rooms on one level. Deck has a 40 mm threshold. Not step-free.",
+    amenities: [...included, "Two bedrooms", "Large dining table"],
+    x: 48,
+    y: 72,
+    faqs: [
+      {
+        question: "Do both bedrooms have a view?",
+        answer:
+          "The main bedroom faces the ocean. The second looks into the trees. Both have king beds.",
+      },
+      {
+        question: "Is this cabin suitable for two couples?",
+        answer:
+          "Yes. There are two separate bedrooms, one shared bathroom and a generous communal living space.",
+      },
+    ],
+  },
 ];
 export const addons = [
-  { id:'breakfast', name:'Slow-morning breakfast', description:'A basket of bread, preserves, fruit and a little something warm. Delivered each morning, for every guest.', unit:2400, basis:'per guest, per night' },
-  { id:'sauna', name:'The wood-fired sauna', description:'One private 60-minute session for your party. The host arranges the time with you after booking.', unit:6500, basis:'per stay' },
+  {
+    id: "breakfast",
+    name: "Slow-morning breakfast",
+    description:
+      "A basket of bread, preserves, fruit and a little something warm. Delivered each morning, for every guest.",
+    unit: 2400,
+    basis: "per guest, per night",
+  },
+  {
+    id: "sauna",
+    name: "The wood-fired sauna",
+    description:
+      "One private 60-minute session for your party. The host arranges the time with you after booking.",
+    unit: 6500,
+    basis: "per stay",
+  },
 ] as const;
-export type AddonId = typeof addons[number]['id'];
-export const editorial: Record<string,{title:string; eyebrow:string; body:string}> = {
-  guide:{title:'A few good ways to do very little.',eyebrow:'THE LOCAL FIELD GUIDE',body:'Begin at the water\nWalk the marked shore path in the morning light. Wear grippy footwear; rocks can be slippery and the path is uneven. This is a fictional coastal setting, not real route or tide advice.\n\nTake the long way\nOur woodland loop is conceived as a quiet 1.5 km circuit through spruce and birch. Bring a flask, keep to the marked path and leave the landscape as you find it.\n\nStay in for supper\nEvery cabin has a kitchen, proper cookware and a table worth lingering at. Breakfast is optional; other food and groceries are not included.\n\nLet the weather set the pace\nRain is a reason for the reading chair, a board game or a longer breakfast. There are no compulsory activities and no schedule to keep.'},
-  accessibility:{title:'A welcome with the details included.',eyebrow:'ACCESSIBILITY',body:'Choosing the right cabin\nDriftwood is the only cabin designed with a step-free approach: an 18 m firm path, 900 mm entrance, 1,500 mm turning area and level-access shower with grab rails. The bed height is 520 mm. Other cabins have entrance steps.\n\nAround the property\nThe shore and woodland paths are uneven, unlit in places and not suitable for all mobility needs. The shared sauna has two entrance steps. No transfer hoist or mobility equipment is provided.\n\nUsing this website\nThe property can be explored using the cabin list without using the map. Controls have visible focus states, forms have labels, and reduced-motion preferences are respected.\n\nBefore you book\nMeasurements are fictional design specifications for this portfolio project, not an independently assessed access audit. A real operator must verify every measurement and publish a contact method before accepting real guests.'},
-  arrival:{title:'The last part of the journey.',eyebrow:'YOUR ARRIVAL',body:'Make yourself at home\nCheck-in is from 15:00. Check-out is by 11:00. Your booking confirmation records the cabin, dates, guest count and everything you have added.\n\nA slower arrival\nOne parking space is included with each cabin. Use the illustrated map to find your cabin. Bring footwear suitable for uneven coastal paths and a layer for the evening.\n\nBefore setting out\nTIDEHOUSE is a fictional portfolio retreat. No real address, door code, travel directions or emergency number is published. In a real deployment, the host must send verified arrival details privately to confirmed guests.\n\nGood neighbours\nQuiet hours are 22:00–08:00. Smoking and parties are not permitted. The cabin guest limit applies to every person, including children. Pets are not accommodated in this edition.'},
-  included:{title:'Fewer surprises. More settling in.',eyebrow:'WHAT IS INCLUDED',body:'Inside every cabin\nA fully equipped kitchen, bed linen and towels, a wood stove with an initial supply of firewood, Wi-Fi, a private deck and one parking space. Final cleaning is included in the nightly rate.\n\nJust two optional extras\nBreakfast is CAD 24 per guest per night, for all guests and all nights of your stay. A private wood-fired sauna session is CAD 65 per stay. These are the only add-ons.\n\nThe price you see\nRates vary by cabin, season and night. Your quote itemises each night, optional extras and an illustrative 15% tax. This fictional tax setting is not tax advice and must be reviewed before a real launch. There is no additional resort fee.\n\nBooking boundaries\nStays are 2–21 nights, booked at least one day ahead and up to 365 days ahead. The nightly rate shown on a cabin card is a reference base rate, not a guaranteed quote.'},
-  cancellation:{title:'Plans change. Here is where you stand.',eyebrow:'CANCELLATION POLICY',body:'Seven days or more before arrival\nCancel through your private booking link for a full refund of the booking total. The cutoff is based on calendar dates in the retreat time zone, America/Halifax.\n\nLess than seven days before arrival\nYou may still cancel and release the cabin, but the booking is non-refundable. The cancellation screen shows the amount before you confirm.\n\nAn unfinished booking\nDates are held temporarily during payment. An unpaid hold expires automatically. A declined simulator payment never confirms a booking. A declined Stripe card can be retried while its checkout remains open.\n\nRefund processing\nA cancellation and a completed refund are distinct events. Your confirmation shows whether a refund is pending, completed or needs attention. A provider failure is retried; it is never presented as a completed refund.\n\nPortfolio policy\nThis is an illustrative policy for a fictional property. No real accommodation or live payment is offered.'},
-  privacy:{title:'Your stay, and your information.',eyebrow:'PRIVACY & DEMONSTRATION',body:'A fictional retreat\nTIDEHOUSE is a portfolio project, not a real accommodation provider. Photographs are representative editorial imagery and do not document an actual property. Use test details only.\n\nWhat the booking system stores\nThe name and email you enter, dates, guest count, optional extras, price snapshot, payment reference and booking status are stored in PostgreSQL. Card numbers are never collected by this website; Stripe Checkout handles test card entry when configured.\n\nYour private link\nThe booking link is a bearer credential: anyone with it can view and cancel the booking. Keep it private. Tokens are sent in the URL fragment and removed from the visible address after being saved for this browser session.\n\nCookies and analytics\nThere are no advertising trackers. An HTTP-only owner-session cookie is used for the administration area. The site requests photos from Unsplash and fonts from Google; those services receive normal network request information.\n\nBefore production\nA real operator must supply a verified privacy notice, retention schedule, legal business details and a contact for access or erasure requests. This project does not claim production legal compliance.'}
+export type AddonId = (typeof addons)[number]["id"];
+export const editorial: Record<
+  string,
+  { title: string; eyebrow: string; body: string }
+> = {
+  guide: {
+    title: "A few good ways to do very little.",
+    eyebrow: "THE LOCAL FIELD GUIDE",
+    body: "Begin at the water\nWalk the marked shore path in the morning light. Wear grippy footwear; rocks can be slippery and the path is uneven. This is a fictional coastal setting, not real route or tide advice.\n\nTake the long way\nOur woodland loop is conceived as a quiet 1.5 km circuit through spruce and birch. Bring a flask, keep to the marked path and leave the landscape as you find it.\n\nStay in for supper\nEvery cabin has a kitchen, proper cookware and a table worth lingering at. Breakfast is optional; other food and groceries are not included.\n\nLet the weather set the pace\nRain is a reason for the reading chair, a board game or a longer breakfast. There are no compulsory activities and no schedule to keep.",
+  },
+  accessibility: {
+    title: "A welcome with the details included.",
+    eyebrow: "ACCESSIBILITY",
+    body: "Choosing the right cabin\nDriftwood is the only cabin designed with a step-free approach: an 18 m firm path, 900 mm entrance, 1,500 mm turning area and level-access shower with grab rails. The bed height is 520 mm. Other cabins have entrance steps.\n\nAround the property\nThe shore and woodland paths are uneven, unlit in places and not suitable for all mobility needs. The shared sauna has two entrance steps. No transfer hoist or mobility equipment is provided.\n\nUsing this website\nThe property can be explored using the cabin list without using the map. Controls have visible focus states, forms have labels, and reduced-motion preferences are respected.\n\nBefore you book\nMeasurements are fictional design specifications for this portfolio project, not an independently assessed access audit. A real operator must verify every measurement and publish a contact method before accepting real guests.",
+  },
+  arrival: {
+    title: "The last part of the journey.",
+    eyebrow: "YOUR ARRIVAL",
+    body: "Make yourself at home\nCheck-in is from 15:00. Check-out is by 11:00. Your booking confirmation records the cabin, dates, guest count and everything you have added.\n\nA slower arrival\nOne parking space is included with each cabin. Use the illustrated map to find your cabin. Bring footwear suitable for uneven coastal paths and a layer for the evening.\n\nBefore setting out\nTIDEHOUSE is a fictional portfolio retreat. No real address, door code, travel directions or emergency number is published. In a real deployment, the host must send verified arrival details privately to confirmed guests.\n\nGood neighbours\nQuiet hours are 22:00–08:00. Smoking and parties are not permitted. The cabin guest limit applies to every person, including children. Pets are not accommodated in this edition.",
+  },
+  included: {
+    title: "Fewer surprises. More settling in.",
+    eyebrow: "WHAT IS INCLUDED",
+    body: "Inside every cabin\nA fully equipped kitchen, bed linen and towels, a wood stove with an initial supply of firewood, Wi-Fi, a private deck and one parking space. Final cleaning is included in the nightly rate.\n\nJust two optional extras\nBreakfast is CAD 24 per guest per night, for all guests and all nights of your stay. A private wood-fired sauna session is CAD 65 per stay. These are the only add-ons.\n\nThe price you see\nRates vary by cabin, season and night. Your quote itemises each night, optional extras and an illustrative 15% tax. This fictional tax setting is not tax advice and must be reviewed before a real launch. There is no additional resort fee.\n\nBooking boundaries\nStays are 2–21 nights, booked at least one day ahead and up to 365 days ahead. The nightly rate shown on a cabin card is a reference base rate, not a guaranteed quote.",
+  },
+  cancellation: {
+    title: "Plans change. Here is where you stand.",
+    eyebrow: "CANCELLATION POLICY",
+    body: "Seven days or more before arrival\nCancel through your private booking link for a full refund of the booking total. The cutoff is based on calendar dates in the retreat time zone, America/Halifax.\n\nLess than seven days before arrival\nYou may still cancel and release the cabin, but the booking is non-refundable. The cancellation screen shows the amount before you confirm.\n\nAn unfinished booking\nDates are held temporarily during payment. An unpaid hold expires automatically. A declined simulator payment never confirms a booking. A declined Stripe card can be retried while its checkout remains open.\n\nRefund processing\nA cancellation and a completed refund are distinct events. Your confirmation shows whether a refund is pending, completed or needs attention. A provider failure is retried; it is never presented as a completed refund.\n\nPortfolio policy\nThis is an illustrative policy for a fictional property. No real accommodation or live payment is offered.",
+  },
+  privacy: {
+    title: "Your stay, and your information.",
+    eyebrow: "PRIVACY & DEMONSTRATION",
+    body: "A fictional retreat\nTIDEHOUSE is a portfolio project, not a real accommodation provider. Photographs are representative editorial imagery and do not document an actual property. Use test details only.\n\nWhat the booking system stores\nThe name and email you enter, dates, guest count, optional extras, price snapshot, payment reference and booking status are stored in PostgreSQL. Card numbers are never collected by this website; Stripe Checkout handles test card entry when configured.\n\nYour private link\nThe booking link is a bearer credential: anyone with it can view and cancel the booking. Keep it private. Tokens are sent in the URL fragment and removed from the visible address after being saved for this browser session.\n\nCookies and analytics\nThere are no advertising trackers. An HTTP-only owner-session cookie is used for the administration area. Photographs are served from this website. Fonts are requested from Google, which receives normal network request information. The photographic credits are available at /image-credits.json.\n\nBefore production\nA real operator must supply a verified privacy notice, retention schedule, legal business details and a contact for access or erasure requests. This project does not claim production legal compliance.",
+  },
 };

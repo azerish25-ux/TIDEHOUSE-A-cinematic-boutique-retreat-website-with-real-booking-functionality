@@ -1,3 +1,54 @@
-export function TideMark({className=''}:{className?:string}){return <svg className={className} viewBox="0 0 64 54" fill="none" aria-hidden="true"><path d="M6 27h52M9 36c8-8 15 8 23 0s15 8 23 0M9 45c8-8 15 8 23 0s15 8 23 0M20 22a12 12 0 0 1 24 0M32 1v6M10 10l5 5M54 10l-5 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;}
-export function Arrow({direction='right'}:{direction?:'right'|'left'|'down'|'up'}){return <svg width="23" height="18" viewBox="0 0 24 18" fill="none" aria-hidden="true" style={{transform:`rotate(${direction==='left'?180:direction==='down'?90:direction==='up'?-90:0}deg)`}}><path d="M1 9h21M16 3l6 6-6 6" stroke="currentColor" strokeWidth="1.2"/></svg>;}
-export function Sun(){return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2" stroke="currentColor"/></svg>;}
+export function TideMark({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 64 54"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M6 27h52M9 36c8-8 15 8 23 0s15 8 23 0M9 45c8-8 15 8 23 0s15 8 23 0M20 22a12 12 0 0 1 24 0M32 1v6M10 10l5 5M54 10l-5 5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+export function Arrow({
+  direction = "right",
+}: {
+  direction?: "right" | "left" | "down" | "up";
+}) {
+  return (
+    <svg
+      width="23"
+      height="18"
+      viewBox="0 0 24 18"
+      fill="none"
+      aria-hidden="true"
+      style={{
+        transform: `rotate(${direction === "left" ? 180 : direction === "down" ? 90 : direction === "up" ? -90 : 0}deg)`,
+      }}
+    >
+      <path d="M1 9h21M16 3l6 6-6 6" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+}
+export function Sun() {
+  return (
+    <svg
+      width="26"
+      height="26"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4" stroke="currentColor" />
+      <path
+        d="M12 1v3m0 16v3M1 12h3m16 0h3M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2"
+        stroke="currentColor"
+      />
+    </svg>
+  );
+}

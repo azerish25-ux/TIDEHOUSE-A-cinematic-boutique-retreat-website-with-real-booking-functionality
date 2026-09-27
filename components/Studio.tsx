@@ -1,19 +1,580 @@
-'use client';
-import {useEffect,useState,type FormEvent} from 'react';
-import {api,post,HttpError} from '@/lib/client';
-import {today,addDays,money,formatDate} from '@/lib/domain';
-import {cabins,editorial} from '@/lib/catalog';
-import {Arrow} from './Brand';
-type AdminBooking={id:string;cabin_id:number;arrival:string;departure:string;guests:number;status:string;guest_name:string;guest_email:string;total:number;is_block:boolean;refund_state:string|null};
-type Page={slug:string;title:string;eyebrow:string;body:string};
-type State={bookings:AdminBooking[];rates:{id:number;name:string;base_rate:number}[];pages:Page[];audit:{id:number;action:string;created_at:string}[]};
-export function Studio(){const[state,setState]=useState<State|null>(null),[checking,setChecking]=useState(true),[password,setPassword]=useState(''),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[tab,setTab]=useState('calendar'),[cabinId,setCabinId]=useState(1),[arrival,setArrival]=useState(addDays(today(),30)),[departure,setDeparture]=useState(addDays(today(),33)),[reason,setReason]=useState('Maintenance'),[rate,setRate]=useState('295'),[rateMode,setRateMode]=useState('window'),[page,setPage]=useState<Page>({slug:'guide',...editorial.guide});
- async function refresh(){try{const next=await api<State>('admin/state');setState(next);setError('');return next;}catch(e){if(e instanceof HttpError&&e.status===401){setState(null);}else{setError(e instanceof Error?e.message:'Could not load the studio.');}return null;}finally{setChecking(false);}}
- useEffect(()=>{void refresh();},[]);
- async function login(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{await post('admin/login',{password});setPassword('');await refresh();}catch(e){setError(e instanceof Error?e.message:'Could not sign in.');}finally{setBusy(false);}}
- async function mutate(path:string,body:unknown,message:string){setBusy(true);setError('');setNotice('');try{await post(`admin/${path}`,body);await refresh();setNotice(message);}catch(e){setError(e instanceof Error?e.message:'Could not save the change.');}finally{setBusy(false);}}
- async function logout(){await post('admin/logout',{});setState(null);}
- const dateFields=<div className="form-row"><label>From<input type="date" value={arrival} min={today()} onChange={e=>setArrival(e.target.value)} required/></label><label>Until (checkout date)<input type="date" value={departure} min={arrival} onChange={e=>setDeparture(e.target.value)} required/></label></div>;
- const cabinField=<label>Cabin<select value={cabinId} onChange={e=>setCabinId(Number(e.target.value))}>{cabins.map(c=><option value={c.id} key={c.id}>{c.name}</option>)}</select></label>;
- return <main id="main" className="studio-page section-pad"><div className="section-heading"><div><span className="eyebrow">TIDEHOUSE / OWNER STUDIO</span><h1>Behind <em>the quiet.</em></h1></div>{state&&<button className="text-link" onClick={logout}>Sign out<Arrow/></button>}</div>{error&&<p role="alert" className="notice error">{error}</p>}{notice&&<p role="status" className="notice success">{notice}</p>}{checking?<p>Opening the studio…</p>:!state?<form className="studio-login booking-card" onSubmit={login}><span className="eyebrow">OWNER ACCESS</span><h2>A place for<br/><em>the practical things.</em></h2><label>Owner password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button className="button dark" disabled={busy}>Sign in<Arrow/></button><p className="booking-reassurance">Access requires a configured owner password. There is no default password or public administrative mode.</p></form>:<><div className="studio-stats"><div><small>CONFIRMED STAYS</small><strong>{state.bookings.filter(b=>b.status==='confirmed').length}</strong></div><div><small>ACTIVE DATE BLOCKS</small><strong>{state.bookings.filter(b=>b.status==='blocked').length}</strong></div><div><small>REFUNDS NEEDING ATTENTION</small><strong>{state.bookings.filter(b=>b.refund_state&&b.refund_state!=='refunded').length}</strong></div><button className="text-link" onClick={()=>refresh()}>Refresh studio<Arrow/></button></div><nav className="studio-tabs" aria-label="Owner studio sections">{[['calendar','Calendar & reservations'],['rates','Rates'],['content','Editorial content']].map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} onClick={()=>setTab(key)}>{label}</button>)}</nav>{tab==='calendar'&&<><div className="studio-calendar"><div className="studio-calendar-heading"><span className="eyebrow">THE NEXT 28 NIGHTS</span><span>H = hold · C = confirmed · B = owner block</span></div><div className="occupancy-scroll"><table className="occupancy-table"><thead><tr><th>Cabin</th>{Array.from({length:28},(_,i)=><th key={i}>{addDays(today(),i).slice(8)}</th>)}</tr></thead><tbody>{cabins.map(c=><tr key={c.id}><th>{c.name}</th>{Array.from({length:28},(_,i)=>{const day=addDays(today(),i),b=state.bookings.find(r=>r.cabin_id===c.id&&r.arrival<=day&&r.departure>day&&['held','confirmed','blocked'].includes(r.status));return <td key={day} title={`${c.name}, ${day}: ${b?.status??'available'}`} className={b?`occupancy-${b.status}`:''}>{b?.status==='held'?'H':b?.status==='confirmed'?'C':b?.status==='blocked'?'B':'·'}</td>;})}</tr>)}</tbody></table></div></div><div className="studio-grid"><form className="studio-panel" onSubmit={e=>{e.preventDefault();void mutate('blocks',{cabinId,arrival,departure,reason},'Dates blocked. The public booking calendar now reflects this change.');}}><span className="eyebrow">PROTECT A LITTLE SPACE</span><h3>Block dates</h3>{cabinField}{dateFields}<label>Reason<input value={reason} maxLength={200} onChange={e=>setReason(e.target.value)} required/></label><button className="button dark" disabled={busy}>Block these dates<Arrow/></button><p className="booking-reassurance">A block cannot overlap a booking or a temporary hold. Until is the first unblocked date.</p></form><div className="studio-panel"><span className="eyebrow">RELIABLE FOLLOW-THROUGH</span><h3>Payments & messages</h3><p>Process queued refunds, send configured confirmation emails and expire unpaid holds. Failed provider requests remain visible and can be retried.</p><button className="button outline" disabled={busy} onClick={()=>mutate('maintenance',{},'Maintenance completed. Check the refund status below; unconfigured email delivery remains queued.')}>Process pending work<Arrow/></button><p className="booking-reassurance">Schedule the protected /api/maintenance endpoint for automatic background processing. No cron job is silently assumed to exist.</p></div></div><div className="reservation-list"><h3>Reservations & blocks</h3><p className="rate-note">Most recent 200 records. Test guest details are visible only to the authenticated owner.</p><div className="table-scroll"><table><thead><tr><th>Cabin / reference</th><th>Dates</th><th>Guest / reason</th><th>Status</th><th>Total / refund</th><th>Action</th></tr></thead><tbody>{state.bookings.length===0?<tr><td colSpan={6}>No reservations yet. The coast is clear.</td></tr>:state.bookings.map(b=><tr key={b.id}><td>{cabins.find(c=>c.id===b.cabin_id)?.name}<small>{b.id.slice(0,8)}</small></td><td>{formatDate(b.arrival)}<small>to {formatDate(b.departure)}</small></td><td>{b.guest_name}<small>{b.is_block?'Owner block':b.guest_email}</small></td><td><span className={`status-tag status-${b.status}`}>{b.status}</span></td><td>{money(b.total)}<small>{b.refund_state?`Refund ${b.refund_state}`:''}</small></td><td>{b.status==='blocked'&&<button className="small-link" disabled={busy} onClick={()=>mutate('unblock',{id:b.id},'Date block removed.')}>Unblock</button>}</td></tr>)}</tbody></table></div></div></>}{tab==='rates'&&<div className="studio-grid"><form className="studio-panel" onSubmit={e=>{e.preventDefault();void mutate('rates',{cabinId,arrival,departure,cents:Math.round(Number(rate)*100),mode:rateMode},'Rates saved. Existing booking price snapshots are unchanged.');}}><span className="eyebrow">PRICE WITH INTENTION</span><h3>Change nightly rates</h3>{cabinField}<label>Rate type<select value={rateMode} onChange={e=>setRateMode(e.target.value)}><option value="window">Exact nightly override for selected dates</option><option value="base">Base nightly rate (seasonal rules apply)</option></select></label>{rateMode==='window'&&dateFields}<label>Rate in CAD<input type="number" min="50" max="5000" step="0.01" value={rate} onChange={e=>setRate(e.target.value)} required/></label><button className="button dark" disabled={busy}>Save nightly rate<Arrow/></button></form><div className="studio-panel"><h3>Current base rates</h3>{state.rates.map(r=><div className="price-row" key={r.id}><span>{r.name}</span><strong>{money(r.base_rate)}</strong></div>)}<p>June–August: base × 1.28. November–March: base × 0.85. Fridays and Saturdays: additional × 1.10. Exact date overrides replace both multipliers.</p><p className="booking-reassurance">Every quote is recalculated on the server. A changed price requires the guest to review a fresh quote before reserving.</p></div></div>}{tab==='content'&&<form className="studio-panel content-editor" onSubmit={e=>{e.preventDefault();void mutate('content',page,'Editorial page published. Navigate to the public page to see it.');}}><span className="eyebrow">THE WORDS THAT WELCOME</span><h3>Edit the field notes</h3><label>Page<select value={page.slug} onChange={e=>setPage(state.pages.find(p=>p.slug===e.target.value)!)}>{state.pages.map(p=><option key={p.slug} value={p.slug}>{p.eyebrow}</option>)}</select></label><label>Section label<input value={page.eyebrow} onChange={e=>setPage({...page,eyebrow:e.target.value})} maxLength={80} required/></label><label>Page title<input value={page.title} onChange={e=>setPage({...page,title:e.target.value})} maxLength={150} required/></label><label>Page content<textarea rows={18} value={page.body} onChange={e=>setPage({...page,body:e.target.value})} maxLength={12000} required/></label><p className="booking-reassurance">Use a heading on its own line, followed by the paragraph. Separate sections with a blank line. Plain text only; pasted HTML is rendered as text, not executed.</p><button className="button dark" disabled={busy}>Publish this page<Arrow/></button></form>}</>}</main>;
+"use client";
+import { useEffect, useState, type FormEvent } from "react";
+import { api, post, HttpError } from "@/lib/client";
+import { today, addDays, money, formatDate } from "@/lib/domain";
+import { cabins, editorial } from "@/lib/catalog";
+import { Arrow } from "./Brand";
+type AdminBooking = {
+  id: string;
+  cabin_id: number;
+  arrival: string;
+  departure: string;
+  guests: number;
+  status: string;
+  guest_name: string;
+  guest_email: string;
+  total: number;
+  is_block: boolean;
+  refund_state: string | null;
+};
+type Page = { slug: string; title: string; eyebrow: string; body: string };
+type State = {
+  bookings: AdminBooking[];
+  rates: { id: number; name: string; base_rate: number }[];
+  pages: Page[];
+  audit: { id: number; action: string; created_at: string }[];
+};
+export function Studio() {
+  const [state, setState] = useState<State | null>(null),
+    [checking, setChecking] = useState(true),
+    [password, setPassword] = useState(""),
+    [error, setError] = useState(""),
+    [notice, setNotice] = useState(""),
+    [busy, setBusy] = useState(false),
+    [tab, setTab] = useState("calendar"),
+    [cabinId, setCabinId] = useState(1),
+    [arrival, setArrival] = useState(addDays(today(), 30)),
+    [departure, setDeparture] = useState(addDays(today(), 33)),
+    [reason, setReason] = useState("Maintenance"),
+    [rate, setRate] = useState("295"),
+    [rateMode, setRateMode] = useState("window"),
+    [page, setPage] = useState<Page>({ slug: "guide", ...editorial.guide });
+  async function refresh() {
+    try {
+      const next = await api<State>("admin/state");
+      setState(next);
+      setError("");
+      return next;
+    } catch (e) {
+      if (e instanceof HttpError && e.status === 401) {
+        setState(null);
+      } else {
+        setError(e instanceof Error ? e.message : "Could not load the studio.");
+      }
+      return null;
+    } finally {
+      setChecking(false);
+    }
+  }
+  useEffect(() => {
+    void refresh();
+  }, []);
+  async function login(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await post("admin/login", { password });
+      setPassword("");
+      await refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not sign in.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function mutate(path: string, body: unknown, message: string) {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await post(`admin/${path}`, body);
+      await refresh();
+      setNotice(message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save the change.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function logout() {
+    await post("admin/logout", {});
+    setState(null);
+  }
+  const dateFields = (
+    <div className="form-row">
+      <label>
+        From
+        <input
+          type="date"
+          value={arrival}
+          min={today()}
+          onChange={(e) => setArrival(e.target.value)}
+          required
+        />
+      </label>
+      <label>
+        Until (checkout date)
+        <input
+          type="date"
+          value={departure}
+          min={arrival}
+          onChange={(e) => setDeparture(e.target.value)}
+          required
+        />
+      </label>
+    </div>
+  );
+  const cabinField = (
+    <label>
+      Cabin
+      <select
+        aria-label="Cabin"
+        value={cabinId}
+        onChange={(e) => setCabinId(Number(e.target.value))}
+      >
+        {cabins.map((c) => (
+          <option value={c.id} key={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+  return (
+    <main id="main" className="studio-page section-pad">
+      <div className="section-heading">
+        <div>
+          <span className="eyebrow">TIDEHOUSE / OWNER STUDIO</span>
+          <h1>
+            Behind <em>the quiet.</em>
+          </h1>
+        </div>
+        {state && (
+          <button className="text-link" onClick={logout}>
+            Sign out
+            <Arrow />
+          </button>
+        )}
+      </div>
+      {error && (
+        <p role="alert" className="notice error">
+          {error}
+        </p>
+      )}
+      {notice && (
+        <p role="status" className="notice success">
+          {notice}
+        </p>
+      )}
+      {checking ? (
+        <p>Opening the studio…</p>
+      ) : !state ? (
+        <form className="studio-login booking-card" onSubmit={login}>
+          <span className="eyebrow">OWNER ACCESS</span>
+          <h2>
+            A place for
+            <br />
+            <em>the practical things.</em>
+          </h2>
+          <label>
+            Owner password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          <button className="button dark" disabled={busy}>
+            Sign in
+            <Arrow />
+          </button>
+          <p className="booking-reassurance">
+            Access requires a configured owner password. There is no default
+            password or public administrative mode.
+          </p>
+        </form>
+      ) : (
+        <>
+          <div className="studio-stats">
+            <div>
+              <small>CONFIRMED STAYS</small>
+              <strong>
+                {state.bookings.filter((b) => b.status === "confirmed").length}
+              </strong>
+            </div>
+            <div>
+              <small>ACTIVE DATE BLOCKS</small>
+              <strong>
+                {state.bookings.filter((b) => b.status === "blocked").length}
+              </strong>
+            </div>
+            <div>
+              <small>REFUNDS NEEDING ATTENTION</small>
+              <strong>
+                {
+                  state.bookings.filter(
+                    (b) => b.refund_state && b.refund_state !== "refunded",
+                  ).length
+                }
+              </strong>
+            </div>
+            <button className="text-link" onClick={() => refresh()}>
+              Refresh studio
+              <Arrow />
+            </button>
+          </div>
+          <nav className="studio-tabs" aria-label="Owner studio sections">
+            {[
+              ["calendar", "Calendar & reservations"],
+              ["rates", "Rates"],
+              ["content", "Editorial content"],
+            ].map(([key, label]) => (
+              <button
+                key={key}
+                aria-current={tab === key ? "page" : undefined}
+                onClick={() => setTab(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+          {tab === "calendar" && (
+            <>
+              <div className="studio-calendar">
+                <div className="studio-calendar-heading">
+                  <span className="eyebrow">THE NEXT 28 NIGHTS</span>
+                  <span>H = hold · C = confirmed · B = owner block</span>
+                </div>
+                <div className="occupancy-scroll">
+                  <table className="occupancy-table">
+                    <thead>
+                      <tr>
+                        <th>Cabin</th>
+                        {Array.from({ length: 28 }, (_, i) => (
+                          <th key={i}>{addDays(today(), i).slice(8)}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cabins.map((c) => (
+                        <tr key={c.id}>
+                          <th>{c.name}</th>
+                          {Array.from({ length: 28 }, (_, i) => {
+                            const day = addDays(today(), i),
+                              b = state.bookings.find(
+                                (r) =>
+                                  r.cabin_id === c.id &&
+                                  r.arrival <= day &&
+                                  r.departure > day &&
+                                  ["held", "confirmed", "blocked"].includes(
+                                    r.status,
+                                  ),
+                              );
+                            return (
+                              <td
+                                key={day}
+                                title={`${c.name}, ${day}: ${b?.status ?? "available"}`}
+                                className={b ? `occupancy-${b.status}` : ""}
+                              >
+                                {b?.status === "held"
+                                  ? "H"
+                                  : b?.status === "confirmed"
+                                    ? "C"
+                                    : b?.status === "blocked"
+                                      ? "B"
+                                      : "·"}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="studio-grid">
+                <form
+                  className="studio-panel"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void mutate(
+                      "blocks",
+                      { cabinId, arrival, departure, reason },
+                      "Dates blocked. The public booking calendar now reflects this change.",
+                    );
+                  }}
+                >
+                  <span className="eyebrow">PROTECT A LITTLE SPACE</span>
+                  <h3>Block dates</h3>
+                  {cabinField}
+                  {dateFields}
+                  <label>
+                    Reason
+                    <input
+                      value={reason}
+                      maxLength={200}
+                      onChange={(e) => setReason(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <button className="button dark" disabled={busy}>
+                    Block these dates
+                    <Arrow />
+                  </button>
+                  <p className="booking-reassurance">
+                    A block cannot overlap a booking or a temporary hold. Until
+                    is the first unblocked date.
+                  </p>
+                </form>
+                <div className="studio-panel">
+                  <span className="eyebrow">RELIABLE FOLLOW-THROUGH</span>
+                  <h3>Payments & messages</h3>
+                  <p>
+                    Process queued refunds, send configured confirmation emails
+                    and expire unpaid holds. Failed provider requests remain
+                    visible and can be retried.
+                  </p>
+                  <button
+                    className="button outline"
+                    disabled={busy}
+                    onClick={() =>
+                      mutate(
+                        "maintenance",
+                        {},
+                        "Maintenance completed. Check the refund status below; unconfigured email delivery remains queued.",
+                      )
+                    }
+                  >
+                    Process pending work
+                    <Arrow />
+                  </button>
+                  <p className="booking-reassurance">
+                    Schedule the protected /api/maintenance endpoint for
+                    automatic background processing. No cron job is silently
+                    assumed to exist.
+                  </p>
+                </div>
+              </div>
+              <div className="reservation-list">
+                <h3>Reservations & blocks</h3>
+                <p className="rate-note">
+                  Most recent 200 records. Test guest details are visible only
+                  to the authenticated owner.
+                </p>
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Cabin / reference</th>
+                        <th>Dates</th>
+                        <th>Guest / reason</th>
+                        <th>Status</th>
+                        <th>Total / refund</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.bookings.length === 0 ? (
+                        <tr>
+                          <td colSpan={6}>
+                            No reservations yet. The coast is clear.
+                          </td>
+                        </tr>
+                      ) : (
+                        state.bookings.map((b) => (
+                          <tr key={b.id}>
+                            <td>
+                              {cabins.find((c) => c.id === b.cabin_id)?.name}
+                              <small>{b.id.slice(0, 8)}</small>
+                            </td>
+                            <td>
+                              {formatDate(b.arrival)}
+                              <small>to {formatDate(b.departure)}</small>
+                            </td>
+                            <td>
+                              {b.guest_name}
+                              <small>
+                                {b.is_block ? "Owner block" : b.guest_email}
+                              </small>
+                            </td>
+                            <td>
+                              <span className={`status-tag status-${b.status}`}>
+                                {b.status}
+                              </span>
+                            </td>
+                            <td>
+                              {money(b.total)}
+                              <small>
+                                {b.refund_state
+                                  ? `Refund ${b.refund_state}`
+                                  : ""}
+                              </small>
+                            </td>
+                            <td>
+                              {b.status === "blocked" && (
+                                <button
+                                  className="small-link"
+                                  disabled={busy}
+                                  onClick={() =>
+                                    mutate(
+                                      "unblock",
+                                      { id: b.id },
+                                      "Date block removed.",
+                                    )
+                                  }
+                                >
+                                  Unblock
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+          {tab === "rates" && (
+            <div className="studio-grid">
+              <form
+                className="studio-panel"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void mutate(
+                    "rates",
+                    {
+                      cabinId,
+                      arrival,
+                      departure,
+                      cents: Math.round(Number(rate) * 100),
+                      mode: rateMode,
+                    },
+                    "Rates saved. Existing booking price snapshots are unchanged.",
+                  );
+                }}
+              >
+                <span className="eyebrow">PRICE WITH INTENTION</span>
+                <h3>Change nightly rates</h3>
+                {cabinField}
+                <label>
+                  Rate type
+                  <select
+                    value={rateMode}
+                    onChange={(e) => setRateMode(e.target.value)}
+                  >
+                    <option value="window">
+                      Exact nightly override for selected dates
+                    </option>
+                    <option value="base">
+                      Base nightly rate (seasonal rules apply)
+                    </option>
+                  </select>
+                </label>
+                {rateMode === "window" && dateFields}
+                <label>
+                  Rate in CAD
+                  <input
+                    type="number"
+                    min="50"
+                    max="5000"
+                    step="0.01"
+                    value={rate}
+                    onChange={(e) => setRate(e.target.value)}
+                    required
+                  />
+                </label>
+                <button className="button dark" disabled={busy}>
+                  Save nightly rate
+                  <Arrow />
+                </button>
+              </form>
+              <div className="studio-panel">
+                <h3>Current base rates</h3>
+                {state.rates.map((r) => (
+                  <div className="price-row" key={r.id}>
+                    <span>{r.name}</span>
+                    <strong>{money(r.base_rate)}</strong>
+                  </div>
+                ))}
+                <p>
+                  June–August: base × 1.28. November–March: base × 0.85. Fridays
+                  and Saturdays: additional × 1.10. Exact date overrides replace
+                  both multipliers.
+                </p>
+                <p className="booking-reassurance">
+                  Every quote is recalculated on the server. A changed price
+                  requires the guest to review a fresh quote before reserving.
+                </p>
+              </div>
+            </div>
+          )}
+          {tab === "content" && (
+            <form
+              className="studio-panel content-editor"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void mutate(
+                  "content",
+                  page,
+                  "Editorial page published. Navigate to the public page to see it.",
+                );
+              }}
+            >
+              <span className="eyebrow">THE WORDS THAT WELCOME</span>
+              <h3>Edit the field notes</h3>
+              <label>
+                Page
+                <select
+                  value={page.slug}
+                  onChange={(e) =>
+                    setPage(state.pages.find((p) => p.slug === e.target.value)!)
+                  }
+                >
+                  {state.pages.map((p) => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.eyebrow}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Section label
+                <input
+                  value={page.eyebrow}
+                  onChange={(e) =>
+                    setPage({ ...page, eyebrow: e.target.value })
+                  }
+                  maxLength={80}
+                  required
+                />
+              </label>
+              <label>
+                Page title
+                <input
+                  value={page.title}
+                  onChange={(e) => setPage({ ...page, title: e.target.value })}
+                  maxLength={150}
+                  required
+                />
+              </label>
+              <label>
+                Page content
+                <textarea
+                  rows={18}
+                  value={page.body}
+                  onChange={(e) => setPage({ ...page, body: e.target.value })}
+                  maxLength={12000}
+                  required
+                />
+              </label>
+              <p className="booking-reassurance">
+                Use a heading on its own line, followed by the paragraph.
+                Separate sections with a blank line. Plain text only; pasted
+                HTML is rendered as text, not executed.
+              </p>
+              <button className="button dark" disabled={busy}>
+                Publish this page
+                <Arrow />
+              </button>
+            </form>
+          )}
+        </>
+      )}
+    </main>
+  );
 }

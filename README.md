@@ -23,6 +23,7 @@ Use Node 22.16+ and PostgreSQL 17 or later. The database user needs permission t
 
 ```sh
 npm install
+node scripts/assets.mjs
 cp .env.example .env.local
 # Set DATABASE_URL, APP_URL, APP_SECRET and ADMIN_PASSWORD_HASH in .env.local.
 # Generate a random session secret:
@@ -97,7 +98,7 @@ GitHub Actions runs the checks against a real PostgreSQL service and publishes r
 
 ## Photography and design provenance
 
-The visual system, typography treatment, wordmark, line illustrations, property map, floor-plan diagrams and page layouts are original code/design work for this project. Photographs are representative Unsplash images, not generated property photographs and not evidence of an actual TIDEHOUSE location. URLs are centralised in `lib/catalog.ts`. Google Fonts supplies Instrument Serif and DM Sans. Fonts and photographs remain subject to their own terms: https://unsplash.com/license and https://fonts.google.com/knowledge/glossary/licensing
+The visual system, typography treatment, wordmark, line illustrations, property map, floor-plan diagrams and page layouts are original code/design work for this project. Photographs are representative Unsplash images, not generated property photographs and not evidence of an actual TIDEHOUSE location. A fixed coastal/timber photographic set is stored under `public/images/`; `public/image-credits.json` records photographers, source pages, licenses and content hashes. `scripts/assets.mjs` reproducibly prepares missing assets. Images are architectural inspiration, not documentation of one real property. Google Fonts supplies Instrument Serif and DM Sans. Fonts and photographs remain subject to their own terms: https://unsplash.com/license and https://fonts.google.com/knowledge/glossary/licensing
 
 Native image generation was not available in the build session. No generated image is falsely described as an original photograph. Replace representative imagery with a coherent commissioned or generated five-cabin asset library before presenting this as a real property.
 
