@@ -1,0 +1,6 @@
+'use client';
+import Link from 'next/link';
+import {useCatalog} from './Site';
+import {imagery} from '@/lib/catalog';
+import {Arrow,Sun} from './Brand';
+export function Editorial({slug}:{slug:string}){const{pages}=useCatalog(),page=pages[slug];return <main id="main" className="editorial-page"><div className="editorial-hero section-pad"><Link className="back-link" href="/"><Arrow direction="left"/>Back to the coast</Link><span className="eyebrow">{page.eyebrow}</span><h1>{page.title}</h1><Sun/></div>{slug==='guide'&&<div className="editorial-banner"><img src={imagery.forest} alt="Light through the trees on a quiet woodland morning"/></div>}<div className="editorial-body section-pad"><aside><span className="eyebrow">GOOD TO KNOW</span>{Object.entries(pages).map(([key,p])=><Link href={`/field-notes/${key}`} key={key} aria-current={key===slug?'page':undefined}>{p.eyebrow}<Arrow/></Link>)}</aside><article>{page.body.split('\n\n').map((p,i)=>{const[title,...body]=p.split('\n');return <section key={i}><span className="eyebrow">0{i+1}</span><h2>{title}</h2><p>{body.join('\n')}</p></section>;})}<Link className="button dark" href="/stay">Find your stay<Arrow/></Link></article></div></main>;}

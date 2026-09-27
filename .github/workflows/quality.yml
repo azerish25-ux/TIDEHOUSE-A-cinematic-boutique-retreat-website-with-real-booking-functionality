@@ -1,0 +1,77 @@
+name: TIDEHOUSE quality
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['evidence/**', '*.md']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: tidehouse-quality-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_USER: tidehouse
+          POSTGRES_DB: tidehouse_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U tidehouse -d tidehouse_test'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://tidehouse@localhost:5432/tidehouse_test
+      TEST_DATABASE_URL: postgresql://tidehouse@localhost:5432/tidehouse_test
+      APP_URL: http://localhost:3000
+      PAYMENT_PROVIDER: simulator
+      ALLOW_PAYMENT_SIMULATOR: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
+      - name: Generate ephemeral test authentication
+        run: |
+          node --input-type=module -e "import{randomBytes,scryptSync}from'node:crypto';import{appendFileSync}from'node:fs';const p=randomBytes(24).toString('hex'),s=randomBytes(16).toString('hex');appendFileSync(process.env.GITHUB_ENV,'APP_SECRET='+randomBytes(32).toString('hex')+'\nE2E_ADMIN_PASSWORD='+p+'\nADMIN_PASSWORD_HASH=scrypt:'+s+':'+scryptSync(p,s,64).toString('hex')+'\n');"
+      - name: Database migrations and seed
+        run: npm run db:setup
+      - name: Pricing and validation tests
+        run: npm test
+      - name: PostgreSQL concurrency and payment-state tests
+        run: npm run test:integration
+      - name: Production build and strict type checking
+        run: npm run build && npm run typecheck
+      - name: Install test browser
+        run: npx playwright install --with-deps chromium
+      - name: Browser journeys, responsive screenshots and accessibility
+        run: npm run test:e2e
+      - name: Record verification metadata
+        if: success()
+        run: |
+          node --input-type=module -e "import fs from 'node:fs';fs.mkdirSync('evidence',{recursive:true});fs.writeFileSync('evidence/verification.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID,verifiedAt:new Date().toISOString(),paymentProvider:'local simulator; Stripe signatures tested without a provider account',limitations:['actual Stripe sandbox checkout needs account credentials','email sending needs sender credentials','this is not a public deployment']},null,2));"
+      - name: Package source snapshot
+        if: always()
+        run: git archive --format=zip HEAD -o tidehouse-source.zip
+      - name: Upload verification artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tidehouse-quality-evidence
+          path: |
+            evidence/
+            playwright-report/
+            test-results/
+            package-lock.json
+            tidehouse-source.zip
+          retention-days: 14

@@ -1,0 +1,2 @@
+'use client';
+export default function ErrorPage({reset}:{reset:()=>void}){return <main id="main" className="empty-page section-pad"><span className="eyebrow">A SMALL INTERRUPTION</span><h1>Let’s find<br/><em>our way back.</em></h1><p>This page could not be loaded. No booking or payment success should be assumed from this message.</p><button className="button dark" onClick={reset}>Try again →</button></main>;}

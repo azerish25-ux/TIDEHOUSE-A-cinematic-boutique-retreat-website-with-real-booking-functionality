@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: tidehouse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}
+      POSTGRES_DB: tidehouse
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - tidehouse-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tidehouse -d tidehouse']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  tidehouse-data:
