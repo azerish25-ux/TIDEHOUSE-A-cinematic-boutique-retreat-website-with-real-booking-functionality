@@ -21,8 +21,9 @@ test('invalid date links recover instead of throwing during formatting', async (
 test('Cove floor plan uses a queen and the enlarged view restores keyboard focus', async ({ page }) => {
   await page.goto('/cabins/the-cove');
   await page.locator('summary').filter({ hasText: 'The floor plan' }).click();
-  await expect(page.locator('.floor-plan svg')).toContainText('QUEEN');
-  await expect(page.locator('.floor-plan svg')).not.toContainText('KING');
+  const plan = page.getByRole('img', { name: /^The Cove illustrative floor plan/ });
+  await expect(plan).toContainText('QUEEN');
+  await expect(plan).not.toContainText('KING');
   const trigger = page.getByRole('button', { name: 'Enlarge The Cove floor plan' });
   await trigger.click(); await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape'); await expect(page.getByRole('dialog')).toHaveCount(0); await expect(trigger).toBeFocused();
@@ -52,7 +53,7 @@ test('changed dates cannot submit the previous quote while a search is delayed',
   await page.getByLabel('Arrival', { exact: true }).fill(addDays(arrival, 6));
   await expect(proceed).toBeDisabled(); await expect(proceed).toBeEnabled();
 });
-// Each route is a separate test: a failed homepage scan never suppresses checkout auditing.
+// Independent routes ensure that one failed scan never suppresses another.
 for (const [name, path] of [['homepage', '/'], ['booking', `/stay?${dates}`], ['cabin', '/cabins/the-cove'], ['arrival', '/field-notes/arrival']] as const) {
   test(`${name} has no automated WCAG A/AA violations or horizontal overflow`, async ({ page }) => {
     await page.goto(path); await page.evaluate(() => document.fonts.ready);

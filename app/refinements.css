@@ -16,6 +16,9 @@
 .checkout-recovery { margin-top: 20px; }
 .checkout-recovery .button { margin-bottom: 10px; }
 .private-link-fallback { overflow-wrap: anywhere; font-size: 13px; }
+.cabin-selector button > .availability-status { font: 500 11px/1.5 var(--sans); color: #405748; letter-spacing: 0; }
+.cabin-selector button > .availability-status.unavailable { color: #7c4130; }
+.cabin-selector button { padding-top: 12px; padding-bottom: 8px; }
 @media (max-width: 700px) {
   .cabin-selector label { font-size: 11px; align-items: flex-start; }
   .cabin-selector input { flex-shrink: 0; }
