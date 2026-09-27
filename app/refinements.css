@@ -1,48 +1,23 @@
-/* Keep the editorial palette while meeting readable small-text contrast. */
-:root {
-  --muted: #506052;
-}
-.cabin-selector label {
-  font-size: 11px;
-  line-height: 1.45;
-}
-.cabin-selector label::after {
-  content: none;
-}
-.cabin-selector input[type="checkbox"] {
-  min-width: 16px;
-  min-height: 16px;
-}
-.intro-bottom p,
-.ritual-copy p,
-.field-copy p {
-  font-size: 14px;
-}
-.heading-aside,
-.cabin-subtitle {
-  font-size: 13px;
-}
-.rate-note,
-.booking-reassurance {
-  font-size: 12px;
-}
-.cabin-meta,
-.cabin-title small {
-  font-size: 11px;
-}
-.map-legend button,
-.footer-bottom {
-  font-size: 11px;
-}
+/* Readable, restrained editorial controls; these rules never disable audits. */
+:root { --muted: #506052; }
+.cabin-selector label { font-size: 11px; line-height: 1.45; }
+.cabin-selector label::after { content: none; }
+.cabin-selector input[type='checkbox'] { min-width: 16px; min-height: 16px; }
+.intro-bottom p, .ritual-copy p, .field-copy p { font-size: 14px; }
+.heading-aside, .cabin-subtitle { font-size: 13px; }
+.rate-note, .booking-reassurance { font-size: 12px; }
+.cabin-meta, .cabin-title small, .map-legend button, .footer-bottom { font-size: 11px; }
+.sauna-illustration > span { color: #243d32; opacity: 1; }
+.floor-plan .plan-drawing { display: block; width: 100%; height: auto; }
+.floor-plan .plan-caption { display: flex; flex-wrap: wrap; gap: 8px 20px; color: #405748; font-size: 12px; line-height: 1.6; }
+.floor-plan .plan-note { font-size: 12px; line-height: 1.6; }
+.availability-status { display: block; font-size: 11px; color: #405748; margin-top: 6px; }
+.availability-status.unavailable { color: #7c4130; }
+.checkout-recovery { margin-top: 20px; }
+.checkout-recovery .button { margin-bottom: 10px; }
+.private-link-fallback { overflow-wrap: anywhere; font-size: 13px; }
 @media (max-width: 700px) {
-  .cabin-selector label {
-    font-size: 10px;
-    align-items: flex-start;
-  }
-  .cabin-selector input {
-    flex-shrink: 0;
-  }
-  .cabin-meta {
-    flex-wrap: wrap;
-  }
+  .cabin-selector label { font-size: 11px; align-items: flex-start; }
+  .cabin-selector input { flex-shrink: 0; }
+  .cabin-meta { flex-wrap: wrap; }
 }

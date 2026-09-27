@@ -2,32 +2,32 @@ name: TIDEHOUSE quality
 on:
   push:
     branches: [main]
-    paths-ignore: ['evidence/**', '*.md']
+    paths-ignore: ['evidence/**', '*.md', 'docs/**']
   pull_request:
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: tidehouse-quality-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_USER: tidehouse
+          POSTGRES_PASSWORD: isolated_ci_database_only
           POSTGRES_DB: tidehouse_test
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U tidehouse -d tidehouse_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      DATABASE_URL: postgresql://tidehouse@localhost:5432/tidehouse_test
-      TEST_DATABASE_URL: postgresql://tidehouse@localhost:5432/tidehouse_test
+      DATABASE_URL: postgresql://tidehouse:isolated_ci_database_only@localhost:5432/tidehouse_test
+      TEST_DATABASE_URL: postgresql://tidehouse:isolated_ci_database_only@localhost:5432/tidehouse_test
       APP_URL: http://localhost:3000
       PAYMENT_PROVIDER: simulator
       ALLOW_PAYMENT_SIMULATOR: 'true'
@@ -35,46 +35,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply compatible design refinements
-        id: refinement
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Generate masked ephemeral test authentication
         run: |
-          if [ -f scripts/refine-delivery.mjs ]; then
-            node scripts/refine-delivery.mjs
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Install dependencies
-        run: if [ -f package-lock.json ]; then npm ci; else npm install; fi
-      - name: Prepare credited local photographs
-        run: node scripts/assets.mjs
-      - name: Format editable source
-        if: steps.refinement.outputs.changed == 'true'
-        run: npm run format
-      - name: Publish finished source and asset provenance
-        if: steps.refinement.outputs.changed == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git config user.name "TIDEHOUSE delivery"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app components lib scripts README.md package-lock.json package.json public *.ts
-          git commit -m "fix: finish coastal art direction and accessible booking controls"
-          git push origin HEAD:main
-      - name: Generate ephemeral test authentication
-        run: |
-          node --input-type=module -e "import{randomBytes,scryptSync}from'node:crypto';import{appendFileSync}from'node:fs';const p=randomBytes(24).toString('hex'),s=randomBytes(16).toString('hex');appendFileSync(process.env.GITHUB_ENV,'APP_SECRET='+randomBytes(32).toString('hex')+'\nE2E_ADMIN_PASSWORD='+p+'\nADMIN_PASSWORD_HASH=scrypt:'+s+':'+scryptSync(p,s,64).toString('hex')+'\n');"
+          node --input-type=module <<'NODE'
+          import {randomBytes,scryptSync} from 'node:crypto';
+          import {appendFileSync} from 'node:fs';
+          const password=randomBytes(24).toString('hex'),salt=randomBytes(16).toString('hex');
+          const values={APP_SECRET:randomBytes(32).toString('hex'),E2E_ADMIN_PASSWORD:password,ADMIN_PASSWORD_HASH:'scrypt:'+salt+':'+scryptSync(password,salt,64).toString('hex')};
+          for(const [name,value] of Object.entries(values)){
+            process.stdout.write('::add-mask::'+value+'\n');
+            appendFileSync(process.env.GITHUB_ENV,name+'='+value+'\n');
+          }
+          NODE
       - name: Database migrations and seed
         run: npm run db:setup
-      - name: Pricing and validation tests
+      - name: Pricing, links, floor plans and checkout recovery tests
         run: npm test
       - name: PostgreSQL concurrency and payment-state tests
         run: npm run test:integration
       - name: Production build and strict type checking
         run: npm run build && npm run typecheck
-      - name: Install test browser
-        run: npx playwright install --with-deps chromium
-      - name: Browser journeys, responsive screenshots and accessibility
+      - name: Install Chromium, WebKit and Firefox
+        run: npx playwright install --with-deps chromium webkit firefox
+      - name: Browser journeys, normal and reduced motion, and independent accessibility checks
         run: npm run test:e2e
       - name: Package runnable production build
         if: success()
@@ -83,13 +73,17 @@ jobs:
           cp -r public/. .next/standalone/public/
           cp -r .next/static .next/standalone/.next/static
           tar -czf tidehouse-runtime.tar.gz -C .next/standalone .
-      - name: Record verification metadata
+      - name: Record passing verification metadata
         if: success()
         run: |
-          node --input-type=module -e "import fs from 'node:fs';import{execFileSync}from'node:child_process';fs.mkdirSync('evidence',{recursive:true});fs.writeFileSync('evidence/verification.json',JSON.stringify({sourceCommit:execFileSync('git',['rev-parse','HEAD']).toString().trim(),runId:process.env.GITHUB_RUN_ID,verifiedAt:new Date().toISOString(),paymentProvider:'local simulator; Stripe signatures tested without a provider account',limitations:['actual Stripe sandbox checkout needs account credentials','email sending needs sender credentials','this is not a public deployment']},null,2));"
-      - name: Package source snapshot
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          fs.mkdirSync('evidence',{recursive:true});
+          fs.writeFileSync('evidence/verification.json',JSON.stringify({sourceCommit:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID,verifiedAt:new Date().toISOString(),paymentProvider:'local simulator; provider API mocked only for recovery tests',browsers:['Chromium desktop/mobile','WebKit','Firefox'],limitations:['real Stripe sandbox checkout and refunds need connected credentials','email delivery needs sender credentials','this workflow is not a public deployment']},null,2));
+          NODE
+      - name: Package exact source snapshot
         if: always()
-        run: if [ -d .git ]; then git archive --format=zip HEAD -o tidehouse-source.zip; fi
+        run: git archive --format=zip HEAD -o tidehouse-source.zip
       - name: Upload verification artifacts
         if: always()
         uses: actions/upload-artifact@v4
