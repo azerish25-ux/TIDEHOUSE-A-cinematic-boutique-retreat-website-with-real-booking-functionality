@@ -57,7 +57,13 @@ export async function reserve(input: ReservationRequest): Promise<ReservationRes
       return result.rows[0];
     });
   } catch (error) { return mapDatabaseError(error); }
-  return ensureCheckout(row);
+  try { return await ensureCheckout(row); }
+  catch {
+    // The reservation already exists. Preserve the guest's management path
+    // during an ambiguous provider timeout instead of hiding the held booking.
+    // The management page can retry the same idempotent checkout operation.
+    return { id: row.id, status: row.status, checkoutUrl: null, provider: row.provider };
+  }
 }
 export async function ensureCheckout(row: ReservationRow): Promise<ReservationResult> {
   const result = (url: string | null): ReservationResult => ({ id: row.id, status: row.status, checkoutUrl: url, provider: row.provider });
@@ -104,13 +110,17 @@ export async function settleEvent(eventId: string, type: string, session: PaidSe
       if (session.amount_total !== row.total_cents || session.currency !== 'cad') throw new DomainError('Payment amount or currency does not match the saved quote.', 400);
       const intent = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
       if (!intent) throw new DomainError('The paid session has no payment reference.', 400);
-      if (['confirmed','cancelling','cancelled','payment_conflict'].includes(row.status)) return;
+      if (row.payment_intent && row.payment_intent !== intent) throw new DomainError('Payment reference does not match this reservation.', 400);
+      if (['confirmed','cancelling','payment_conflict'].includes(row.status)) return;
+      // A cancelled paid booking has already applied its refund policy. A
+      // cancelled unpaid hold has not: an unexpected late payment needs refund.
+      if (row.status === 'cancelled' && row.payment_intent === intent) return;
       if (row.status === 'holding') {
         await client.query("UPDATE reservations SET status='confirmed',checkout_id=$2,payment_intent=$3,updated_at=now() WHERE id=$1", [id, session.id, intent]);
         await client.query("INSERT INTO outbox(reservation_id,kind) VALUES($1,'confirmation') ON CONFLICT DO NOTHING", [id]);
       } else {
         // Never resurrect released inventory; refund unexpected late payment.
-        await client.query("UPDATE reservations SET status='payment_conflict',payment_intent=$2,refund_cents=total_cents,updated_at=now() WHERE id=$1", [id, intent]);
+        await client.query("UPDATE reservations SET status='payment_conflict',checkout_id=$2,payment_intent=$3,refund_cents=total_cents,updated_at=now() WHERE id=$1", [id, session.id, intent]);
         await client.query("INSERT INTO outbox(reservation_id,kind) VALUES($1,'refund') ON CONFLICT DO NOTHING", [id]);
       }
     } else if (type === 'checkout.session.expired' || type === 'checkout.session.async_payment_failed') {
