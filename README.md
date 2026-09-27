@@ -48,7 +48,7 @@ Set `PAYMENT_PROVIDER=simulator` and `ALLOW_PAYMENT_SIMULATOR=true`. This is a *
 
 Set `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY=sk_test_...` and `STRIPE_WEBHOOK_SECRET=whsec_...`. Configure your real HTTPS APP_URL and register `POST /api/webhooks/stripe` for Checkout session completed, async payment succeeded, async payment failed and expired events. For local testing, use Stripe CLI forwarding to this endpoint and its generated signing secret.
 
-The server creates a 30-minute card-only Checkout session while the database holds inventory for 35 minutes. A success redirect does **not** confirm anything. A signed event must match the booking, session, paid status, exact amount and CAD currency. Live keys and live events are rejected. Account credentials were not supplied with this repository; provider-hosted checkout must be exercised after configuration. Synthetic signature verification is not represented as a real provider transaction.
+The server creates a card-only Checkout session with a fixed expiry one minute before its 35-minute database hold ends. The expiry and all request parameters remain identical across retries. A success redirect does **not** confirm anything. A signed event must match the booking, session, paid status, exact amount and CAD currency. Live keys and live events are rejected. Account credentials were not supplied with this repository; provider-hosted checkout must be exercised after configuration. Synthetic signature verification is not represented as a real provider transaction.
 
 Official implementation references: https://docs.stripe.com/checkout/fulfillment and https://www.postgresql.org/docs/current/rangetypes.html
 
@@ -100,7 +100,7 @@ GitHub Actions runs the checks against a real PostgreSQL service and publishes r
 
 The visual system, typography treatment, wordmark, line illustrations, property map, floor-plan diagrams and page layouts are original code/design work for this project. Photographs are representative Unsplash images, not generated property photographs and not evidence of an actual TIDEHOUSE location. A fixed coastal/timber photographic set is stored under `public/images/`; `public/image-credits.json` records photographers, source pages, licenses and content hashes. `scripts/assets.mjs` reproducibly prepares missing assets. Images are architectural inspiration, not documentation of one real property. Google Fonts supplies Instrument Serif and DM Sans. Fonts and photographs remain subject to their own terms: https://unsplash.com/license and https://fonts.google.com/knowledge/glossary/licensing
 
-Native image generation was not available in the build session. No generated image is falsely described as an original photograph. Replace representative imagery with a coherent commissioned or generated five-cabin asset library before presenting this as a real property.
+The homepage and The Lookout now use a generated coastal hero image. Its provenance and hashes are recorded in `public/generated-artwork.json`. The remaining photographs are representative credited references; the coherent five-cabin photographic series is not finished. Generated images are not presented as photographs of a real property.
 
 ## Deployment status
 

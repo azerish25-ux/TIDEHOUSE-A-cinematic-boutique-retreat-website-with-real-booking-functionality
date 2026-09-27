@@ -35,7 +35,7 @@ export const photo = (id: string, _width = 1400) => {
   return "/images/" + asset + ".jpg";
 };
 export const imagery = {
-  hero: photo("photo-1499793983690-e29da59ef1c2", 2200),
+  hero: "/images/lookout-generated.webp",
   coast: photo("photo-1500375592092-40eb2168fd21", 1800),
   forest: photo("photo-1441974231531-c6227db76b6e", 1200),
   interior: photo("photo-1616486338812-3dadae4b4ace"),

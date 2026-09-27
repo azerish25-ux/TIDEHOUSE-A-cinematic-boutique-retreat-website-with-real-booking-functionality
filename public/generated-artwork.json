@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "path": "/images/lookout-generated.webp",
+      "kind": "AI-generated fictional property image",
+      "subject": "The Lookout exterior",
+      "generator": "OpenAI image generation",
+      "createdOn": "2026-09-27",
+      "sourceSha256": "50a4e149928d813d3cb587d35b5833a916a8dbfb550a87c45a8178fcd04e0c2d",
+      "webpSha256": "b0a4d648664f4438ec3ba481b631055164ce5927413ec365c00f0cbee971b5fc",
+      "width": 1536,
+      "height": 1024
+    }
+  ],
+  "note": "This is not a photograph of a real accommodation. Other images remain separately credited architectural references. The full five-cabin photographic series is not complete."
+}
